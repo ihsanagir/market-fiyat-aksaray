@@ -4,12 +4,17 @@ import * as cheerio from 'cheerio';
 
 function trLower(text) {
   if (!text) return '';
-  const mapping = { 'İ': 'i', 'I': 'ı', 'Ş': 'ş', 'Ğ': 'ğ', 'Ü': 'ü', 'Ö': 'ö', 'Ç': 'ç', '\u0307': '' };
-  let str = text;
-  for (const [k, v] of Object.entries(mapping)) {
-    str = str.replaceAll(k, v);
-  }
-  return str.toLowerCase();
+  return text
+    .replace(/İ/g, 'i')
+    .replace(/I/g, 'ı')
+    .replace(/Ş/g, 'ş')
+    .replace(/Ğ/g, 'ğ')
+    .replace(/Ü/g, 'ü')
+    .replace(/Ö/g, 'ö')
+    .replace(/Ç/g, 'ç')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 }
 
 function normalizeMarketName(name) {

@@ -43,10 +43,10 @@ def get_price_history(product_name):
 def tr_lower(text):
     if not text:
         return ''
-    mapping = {'İ': 'i', 'I': 'ı', 'Ş': 'ş', 'Ğ': 'ğ', 'Ü': 'ü', 'Ö': 'ö', 'Ç': 'ç', '\u0307': ''}
-    for k, v in mapping.items():
-        text = text.replace(k, v)
-    return text.lower()
+    import unicodedata
+    s = text.replace('İ', 'i').replace('I', 'ı').replace('Ş', 'ş').replace('Ğ', 'ğ').replace('Ü', 'ü').replace('Ö', 'ö').replace('Ç', 'ç')
+    s = unicodedata.normalize('NFD', s)
+    return ''.join(c for c in s if unicodedata.category(c) != 'Mn').lower()
 
 def normalize_market_name(name):
     if not name:
