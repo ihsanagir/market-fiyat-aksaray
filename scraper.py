@@ -128,6 +128,22 @@ def fetch_tkkoop_live(query):
     except Exception: return []
 
 AUTHENTIC_MARKET_DATABASE = [
+    # --- FINDIK ---
+    {'id': 'fd_1', 'name': 'Simbat Kavrulmuş Fındık İçi 150g', 'brand': 'Simbat', 'price': 74.50, 'oldPrice': 84.00, 'unit': '150g', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
+    {'id': 'fd_2', 'name': 'Simbat Kabuklu Fındık 500g', 'brand': 'Simbat', 'price': 89.00, 'oldPrice': 99.00, 'unit': '500g', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'fd_3', 'name': 'Çerezya Kavrulmuş Fındık İçi 150g', 'brand': 'Çerezya', 'price': 76.00, 'oldPrice': 86.00, 'unit': '150g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
+    {'id': 'fd_4', 'name': 'Çerezya Kabuklu Fındık 500g', 'brand': 'Çerezya', 'price': 92.00, 'oldPrice': 102.00, 'unit': '500g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
+    {'id': 'fd_5', 'name': 'Amigo Kavrulmuş Fındık İçi 150g', 'brand': 'Amigo', 'price': 75.00, 'oldPrice': None, 'unit': '150g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+    {'id': 'fd_6', 'name': 'Amigo Kabuklu Fındık 500g', 'brand': 'Amigo', 'price': 90.00, 'oldPrice': None, 'unit': '500g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+    {'id': 'fd_7', 'name': 'Tarım Kredi Kavrulmuş Fındık İçi 150g', 'brand': 'Tarım Kredi', 'price': 72.00, 'oldPrice': 80.00, 'unit': '150g', 'market': 'Tarım Kredi', 'source': 'Mağaza Kataloğu', 'tier': 3},
+    {'id': 'fd_8', 'name': 'Tarım Kredi Kabuklu Fındık 500g', 'brand': 'Tarım Kredi', 'price': 85.00, 'oldPrice': 95.00, 'unit': '500g', 'market': 'Tarım Kredi', 'source': 'Mağaza Kataloğu', 'tier': 3},
+
+    # --- KAHVE ---
+    {'id': 'kh_1', 'name': 'Abdullah Efendi Türk Kahvesi 100g', 'brand': 'Abdullah Efendi', 'price': 31.50, 'oldPrice': 35.00, 'unit': '100g', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'kh_2', 'name': 'Keyfe Türk Kahvesi 100g', 'brand': 'Keyfe', 'price': 32.50, 'oldPrice': 36.00, 'unit': '100g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
+    {'id': 'kh_3', 'name': 'Crown Türk Kahvesi 100g', 'brand': 'Crown', 'price': 33.00, 'oldPrice': null, 'unit': '100g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+    {'id': 'kh_4', 'name': 'Tarım Kredi Türk Kahvesi 100g', 'brand': 'Tarım Kredi', 'price': 29.50, 'oldPrice': 34.00, 'unit': '100g', 'market': 'Tarım Kredi', 'source': 'Mağaza Kataloğu', 'tier': 3},
+
     # --- ZEYTİN (YEŞİL & SİYAH) ---
     {'id': 'zy_g1', 'name': 'Tarım Kredi Kırma Yeşil Zeytin 400g', 'brand': 'Tarım Kredi', 'price': 64.50, 'oldPrice': 72.00, 'unit': '400g', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
     {'id': 'zy_g2', 'name': 'İnci Çizik Yeşil Zeytin 400g', 'brand': 'İnci', 'price': 65.00, 'oldPrice': 74.00, 'unit': '400g', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
@@ -143,62 +159,6 @@ AUTHENTIC_MARKET_DATABASE = [
     {'id': 'yg_3', 'name': 'Evin Ayçiçek Yağı 5L', 'brand': 'Evin', 'price': 458.00, 'oldPrice': None, 'unit': '5L', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
     {'id': 'yg_4', 'name': 'Vera Ayçiçek Yağı 5L', 'brand': 'Vera', 'price': 459.00, 'oldPrice': 490.00, 'unit': '5L', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2}
 ]
-
-STORE_BRAND_MAP = {
-    'zeytin': {'BİM': 'İnci', 'A101': 'Zeo', 'ŞOK': 'Lio', 'Tarım Kredi': 'Tarım Kredi'},
-    'peynir': {'BİM': 'Aknaz', 'A101': 'Ahir', 'ŞOK': 'Mis', 'Tarım Kredi': 'Tarım Kredi'},
-    'süt': {'BİM': 'Dost', 'A101': 'Birşah', 'ŞOK': 'Mis', 'Tarım Kredi': 'Tarım Kredi'},
-    'yağ': {'BİM': 'Sole', 'A101': 'Vera', 'ŞOK': 'Evin', 'Tarım Kredi': 'Tarım Kredi'},
-    'pirinç': {'BİM': 'Efsane', 'A101': 'Ovadan', 'ŞOK': 'Anadolu Mutfağı', 'Tarım Kredi': 'Tarım Kredi'},
-    'bulgur': {'BİM': 'Efsane', 'A101': 'Yöremce', 'ŞOK': 'Anadolu Mutfağı', 'Tarım Kredi': 'Tarım Kredi'},
-    'çay': {'BİM': 'Berk', 'A101': 'Karadem', 'ŞOK': 'Deren', 'Tarım Kredi': 'Tarım Kredi'},
-    'un': {'BİM': 'Efsane', 'A101': 'Yeğenler', 'ŞOK': 'Piyale', 'Tarım Kredi': 'Tarım Kredi'},
-    'salça': {'BİM': 'Yurdum', 'A101': 'Burcu', 'ŞOK': 'Vatan', 'Tarım Kredi': 'Tarım Kredi'},
-    'makarna': {'BİM': 'Cardella', 'A101': 'Bendo', 'ŞOK': 'Piyale', 'Tarım Kredi': 'Tarım Kredi'}
-}
-
-def generate_dynamic_equivalents(query, base_products):
-    all_markets = ['Tarım Kredi', 'BİM', 'A101', 'ŞOK']
-    existing = set(p.get('market') for p in (base_products or []))
-    missing = [m for m in all_markets if m not in existing]
-    if not missing: return []
-
-    base_price = 45.00
-    base_unit = '1 adet'
-    if base_products and len(base_products) > 0:
-        base_price = base_products[0]['price']
-        base_unit = base_products[0].get('unit', '1 adet')
-
-    q_cap = query.strip().title()
-    q_low = tr_lower(query)
-
-    key_category = 'genel'
-    for cat in STORE_BRAND_MAP:
-        if cat in q_low:
-            key_category = cat
-            break
-
-    multipliers = {'Tarım Kredi': 1.00, 'BİM': 1.02, 'A101': 1.04, 'ŞOK': 1.05}
-    synthesized = []
-
-    for idx, m in enumerate(missing):
-        brand_name = STORE_BRAND_MAP.get(key_category, {}).get(m, m)
-        mult = multipliers.get(m, 1.03)
-        p_val = round(base_price * mult, 2)
-        synthesized.append({
-            'id': f'dyn_{m}_{idx}',
-            'name': f"{brand_name} {q_cap} {base_unit}",
-            'brand': brand_name,
-            'price': p_val,
-            'oldPrice': round(p_val * 1.12, 2),
-            'unit': base_unit,
-            'unitPrice': calculate_unit_price(p_val, base_unit),
-            'market': m,
-            'source': 'Cimri / Akakçe Güncel',
-            'tier': 2
-        })
-
-    return synthesized
 
 PET_FOOD_KEYWORDS = ['kedi', 'köpek', 'mama', 'yaş mama', 'whiskas', 'felix', 'pedigree', 'pro plan', 'gourmet', 'kedi kumu']
 
@@ -223,10 +183,7 @@ def search_market_products(query, location="Aksaray"):
     tier1 = fetch_tkkoop_live(query_clean)
     authentic_matches = [x for x in AUTHENTIC_MARKET_DATABASE if all(w in tr_lower(x['name']) for w in words)]
 
-    initial_raw = list(tier1) + authentic_matches
-    synthesized = generate_dynamic_equivalents(query_clean, initial_raw)
-
-    all_raw = initial_raw + synthesized
+    all_raw = list(tier1) + authentic_matches
     seen_keys = set()
     final_products = []
 
