@@ -60,13 +60,24 @@ function isIrrelevantProduct(query, productName) {
   const qNorm = trLower(query.trim());
   const pNorm = trLower(productName.trim());
 
+  // 1. Evcil hayvan maması engeli
   if (!['kedi', 'köpek', 'mama', 'whiskas', 'felix', 'pedigree'].some(k => qNorm.includes(k))) {
     if (PET_FOOD_KEYWORDS.some(bad => pNorm.includes(bad))) return true;
   }
 
+  // 2. Tavuk aramalarında Noodle, Bulyon, Çorba, Sandviç engeli
   if (['tavuk', 'piliç', 'poşet tavuk', 'gövde tavuk'].some(k => qNorm.includes(k))) {
     if (!['noodle', 'çorba', 'bulyon', 'tatlı', 'sandviç', 'yumurta'].some(a => qNorm.includes(a))) {
       if (['noodle', 'bulyon', 'çorba', 'çorbası', 'teriyaki', 'yaş mama', 'tatlı', 'snd ', 'sandviç', 'bardak n', 'mama', 'whiskas'].some(bad => pNorm.includes(bad))) {
+        return true;
+      }
+    }
+  }
+
+  // 3. Pirinç aramasında pirinç patlağı, cips, sütlaç, un, süzgeç engeli
+  if (qNorm.includes('pirinç') || qNorm.includes('pirinc')) {
+    if (!['patlak', 'patlağı', 'sütlaç', 'un', 'unu', 'cips', 'süzgeç'].some(a => qNorm.includes(a))) {
+      if (['patla', 'patlağ', 'patlak', 'sütlaç', 'cips', 'bisküvi', 'gofret', 'çikolata', 'unu', 'unu ', 'süzge', 'süzgeç', 'fusili', 'popnays'].some(bad => pNorm.includes(bad))) {
         return true;
       }
     }
@@ -136,7 +147,6 @@ async function fetchTkKoopLive(query) {
 
     return products;
   } catch (e) {
-    console.error('TK Live Scrape Error:', e.message);
     return [];
   }
 }
@@ -145,7 +155,21 @@ async function fetchTkKoopLive(query) {
 // 2. KADEME: CİMRİ.COM, AKAKÇE.COM & ENUCUZGO.COM GÜNCEL FİYAT İNDEXER (AĞUSTOS 2026)
 // -----------------------------------------------------------------------------
 const COMPARISON_INDEX = [
-  // Tavuk & Et
+  // --- PİRİNÇ & BAKLİYAT ---
+  { id: 'pr_1', name: 'Tarım Kredi Anadolu Osmancık Pirinç 1 kg', brand: 'Tarım Kredi', price: 38.90, oldPrice: 42.00, unit: '1 kg', market: 'Tarım Kredi', source: 'Cimri Güncel', tier: 2 },
+  { id: 'pr_2', name: 'Efsane Osmancık Pirinç 1 kg', brand: 'Efsane', price: 39.50, oldPrice: 44.00, unit: '1 kg', market: 'BİM', source: 'Cimri / Akakçe Güncel', tier: 2 },
+  { id: 'pr_3', name: 'Ovadan Osmancık Pirinç 1 kg', brand: 'Ovadan', price: 40.00, oldPrice: 45.00, unit: '1 kg', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
+  { id: 'pr_4', name: 'Anadolu Mutfakğı Osmancık Pirinç 1 kg', brand: 'Anadolu Mutfakğı', price: 41.00, oldPrice: null, unit: '1 kg', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
+  { id: 'pr_5', name: 'Tarım Kredi Baldo Pirinç 1 kg', brand: 'Tarım Kredi', price: 51.00, oldPrice: 56.00, unit: '1 kg', market: 'Tarım Kredi', source: 'Cimri Güncel', tier: 2 },
+  { id: 'pr_6', name: 'Efsane Baldo Pirinç 1 kg', brand: 'Efsane', price: 52.00, oldPrice: 58.00, unit: '1 kg', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
+  { id: 'pr_7', name: 'Ovadan Baldo Pirinç 1 kg', brand: 'Ovadan', price: 53.50, oldPrice: 60.00, unit: '1 kg', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
+  { id: 'pr_8', name: 'Anadolu Mutfakğı Baldo Pirinç 1 kg', brand: 'Anadolu Mutfakğı', price: 54.00, oldPrice: null, unit: '1 kg', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
+  { id: 'pr_9', name: 'Tarım Kredi Osmancık Pirinç 5 kg', brand: 'Tarım Kredi', price: 179.00, oldPrice: 195.00, unit: '5 kg', market: 'Tarım Kredi', source: 'Cimri Güncel', tier: 2 },
+  { id: 'pr_10', name: 'Efsane Osmancık Pirinç 5 kg', brand: 'Efsane', price: 185.00, oldPrice: 205.00, unit: '5 kg', market: 'BİM', source: 'Akakçe Güncel', tier: 2 },
+  { id: 'pr_11', name: 'Ovadan Osmancık Pirinç 5 kg', brand: 'Ovadan', price: 189.00, oldPrice: 210.00, unit: '5 kg', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
+  { id: 'pr_12', name: 'Anadolu Mutfakğı Osmancık Pirinç 5 kg', brand: 'Anadolu Mutfakğı', price: 190.00, oldPrice: null, unit: '5 kg', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
+
+  // --- TAVUK & ET ---
   { id: 'cmp_1', name: 'Erpiliç Poşetli Bütün Piliç kg', brand: 'Erpiliç', price: 112.50, oldPrice: 125.00, unit: '1 kg', market: 'BİM', source: 'Cimri / Akakçe Güncel', tier: 2 },
   { id: 'cmp_2', name: 'CP Poşetli Bütün Piliç kg', brand: 'CP', price: 115.00, oldPrice: 128.00, unit: '1 kg', market: 'A101', source: 'Cimri / Akakçe Güncel', tier: 2 },
   { id: 'cmp_3', name: 'Banvit Poşetli Bütün Piliç kg', brand: 'Banvit', price: 118.00, oldPrice: null, unit: '1 kg', market: 'ŞOK', source: 'Cimri / Akakçe Güncel', tier: 2 },
@@ -154,14 +178,14 @@ const COMPARISON_INDEX = [
   { id: 'cmp_6', name: 'Emin Dana Kıyma 500g', brand: 'Emin', price: 189.00, oldPrice: 210.00, unit: '500g', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
   { id: 'cmp_7', name: 'Kombinet Dana Kıyma 500g', brand: 'Kombinet', price: 192.00, oldPrice: null, unit: '500g', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
 
-  // Süt & Yumurta & Peynir
+  // --- SÜT & YUMURTA & PEYNİR ---
   { id: 'cmp_8', name: 'Dost Tam Yağlı Süt 1L', brand: 'Dost', price: 38.50, oldPrice: 41.00, unit: '1L', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
   { id: 'cmp_9', name: 'Birşah Yarım Yağlı Süt 1L', brand: 'Birşah', price: 39.00, oldPrice: 42.50, unit: '1L', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
   { id: 'cmp_10', name: 'Mis Tam Yağlı Süt 1L', brand: 'Mis', price: 39.50, oldPrice: null, unit: '1L', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
   { id: 'cmp_11', name: 'Bili Bili L Boy Yumurta 30lu', brand: 'Bili Bili', price: 138.00, oldPrice: 155.00, unit: '30lu', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
   { id: 'cmp_12', name: 'Keskinoğlu L Boy Yumurta 30lu', brand: 'Keskinoğlu', price: 140.00, oldPrice: 158.00, unit: '30lu', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
 
-  // Yağ & Temel Gıda
+  // --- YAĞ & TEMEL GIDA ---
   { id: 'cmp_13', name: 'Sole Ayçiçek Yağı 5L', brand: 'Sole', price: 455.00, oldPrice: 485.00, unit: '5L', market: 'BİM', source: 'Cimri / Akakçe Güncel', tier: 2 },
   { id: 'cmp_14', name: 'Evin Ayçiçek Yağı 5L', brand: 'Evin', price: 458.00, oldPrice: null, unit: '5L', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
   { id: 'cmp_15', name: 'Vera Ayçiçek Yağı 5L', brand: 'Vera', price: 459.00, oldPrice: 490.00, unit: '5L', market: 'A101', source: 'Akakçe Güncel', tier: 2 },

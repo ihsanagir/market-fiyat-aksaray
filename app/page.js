@@ -90,6 +90,7 @@ export default function Home() {
   const others = filteredProducts.slice(3);
 
   const quickCategories = [
+    { label: 'Pirinç', icon: '🍚' },
     { label: 'Poşet Tavuk', icon: '🍗' },
     { label: 'Süt', icon: '🥛' },
     { label: 'Ekmek', icon: '🍞' },
