@@ -86,7 +86,7 @@ async function fetchTkKoopLive(query) {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
       },
-      timeout: 5000
+      timeout: 6000
     });
 
     if (response.status !== 200) return [];
@@ -96,49 +96,47 @@ async function fetchTkKoopLive(query) {
     const seen = new Set();
 
     $('div').each((_, elem) => {
-      const text = $(elem).text().trim();
-      const strings = text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
-      if (strings.some(s => s === 'TL') && strings.length >= 3 && strings.length <= 6) {
-        const title = strings[0];
-        if (!title || seen.has(title) || title.length <= 2 || title.includes('TL')) return;
+      const cardText = $(elem).text().replace(/\s+/g, ' ').trim();
+      if (cardText.includes('TL') && cardText.length > 5 && cardText.length < 300) {
+        const match = cardText.match(/^(.*?)\s*([\d.,]+)\s*TL$/i);
+        if (match) {
+          const rawTitle = match[1].trim();
+          const priceStr = match[2].replace(/\./g, '').replace(',', '.');
+          const priceVal = parseFloat(priceStr);
 
-        let priceVal = 0;
-        for (let i = 0; i < strings.length; i++) {
-          if (strings[i] === 'TL' && i >= 2) {
-            const liraStr = strings[i - 2].replace(/[,.]/g, '');
-            const kurusStr = strings[i - 1].replace(/[,.]/g, '');
-            priceVal = parseFloat(`${liraStr}.${kurusStr}`);
-            break;
+          if (rawTitle.length > 2 && priceVal > 0 && !seen.has(rawTitle) && !rawTitle.includes('Sırala') && !rawTitle.includes('Fiyat')) {
+            seen.add(rawTitle);
+            
+            let unit = '1 adet';
+            const tLow = trLower(rawTitle);
+            if (tLow.includes('kg')) unit = '1 kg';
+            else if (tLow.includes('1l') || tLow.includes('litre')) unit = '1L';
+            else if (tLow.includes('30 lu') || tLow.includes('30lu')) unit = '30lu';
+            else if (tLow.includes('10 lu') || tLow.includes('10lu')) unit = '10lu';
+            else if (tLow.includes('5 kg') || tLow.includes('5kg')) unit = '5 kg';
+
+            const cleanTitle = rawTitle.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+
+            products.push({
+              id: `tk_live_${products.length}`,
+              name: cleanTitle,
+              brand: 'Tarım Kredi',
+              price: priceVal,
+              oldPrice: null,
+              unit: unit,
+              unitPrice: calculateUnitPrice(priceVal, unit),
+              market: 'Tarım Kredi',
+              source: 'tkkoop.com.tr (Canlı)',
+              tier: 1
+            });
           }
-        }
-
-        if (priceVal > 0) {
-          seen.add(title);
-          let unit = '1 adet';
-          const tLow = trLower(title);
-          if (tLow.includes('kg')) unit = '1 kg';
-          else if (tLow.includes('1l') || tLow.includes('litre')) unit = '1L';
-          else if (tLow.includes('30 lu') || tLow.includes('30lu')) unit = '30lu';
-          else if (tLow.includes('10 lu') || tLow.includes('10lu')) unit = '10lu';
-
-          products.push({
-            id: `tk_live_${products.length}`,
-            name: title.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '),
-            brand: 'Tarım Kredi',
-            price: priceVal,
-            oldPrice: null,
-            unit: unit,
-            unitPrice: calculateUnitPrice(priceVal, unit),
-            market: 'Tarım Kredi',
-            source: 'tkkoop.com.tr (Canlı)',
-            tier: 1
-          });
         }
       }
     });
 
     return products;
   } catch (e) {
+    console.error('TK Live Scrape Error:', e.message);
     return [];
   }
 }
