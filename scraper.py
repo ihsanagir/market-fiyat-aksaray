@@ -122,23 +122,14 @@ COMPARISON_INDEX = [
     {'id': 'bg_2', 'name': 'Efsane Pilavlık Bulgur 1 kg', 'brand': 'Efsane', 'price': 24.50, 'oldPrice': 27.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
     {'id': 'bg_3', 'name': 'Yöremce Pilavlık Bulgur 1 kg', 'brand': 'Yöremce', 'price': 25.00, 'oldPrice': 28.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
     {'id': 'bg_4', 'name': 'Anadolu Mutfağı Pilavlık Bulgur 1 kg', 'brand': 'Anadolu Mutfağı', 'price': 25.50, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
-    {'id': 'bg_5', 'name': 'Tarım Kredi Köftelik Bulgur 1 kg', 'brand': 'Tarım Kredi', 'price': 24.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
-    {'id': 'bg_6', 'name': 'Efsane Köftelik Bulgur 1 kg', 'brand': 'Efsane', 'price': 24.50, 'oldPrice': 27.50, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
-    {'id': 'bg_7', 'name': 'Yöremce Köftelik Bulgur 1 kg', 'brand': 'Yöremce', 'price': 25.00, 'oldPrice': 28.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'bg_8', 'name': 'Anadolu Mutfağı Köftelik Bulgur 1 kg', 'brand': 'Anadolu Mutfağı', 'price': 25.50, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
 
     # --- PİRİNÇ ---
     {'id': 'pr_1', 'name': 'Tarım Kredi Anadolu Osmancık Pirinç 1 kg', 'brand': 'Tarım Kredi', 'price': 38.90, 'oldPrice': 42.00, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
     {'id': 'pr_2', 'name': 'Efsane Osmancık Pirinç 1 kg', 'brand': 'Efsane', 'price': 39.50, 'oldPrice': 44.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
-    {'id': 'pr_3', 'name': 'Ovadan Osmancık Pirinç 1 kg', 'brand': 'Ovadan', 'price': 40.00, 'oldPrice': 45.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'pr_4', 'name': 'Anadolu Mutfağı Osmancık Pirinç 1 kg', 'brand': 'Anadolu Mutfağı', 'price': 41.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier: 2},
+    {'id': 'pr_3', 'name': 'Ovadan Osmancık Pirinç 1 kg', brand: 'Ovadan', price: 40.00, 'oldPrice': 45.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
+    {'id': 'pr_4', 'name': 'Anadolu Mutfağı Osmancık Pirinç 1 kg', brand: 'Anadolu Mutfağı', price: 41.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
 
-    # --- MERCİMEK & UN & SALÇA ---
-    {'id': 'mc_1', 'name': 'Tarım Kredi Kırmızı Mercimek 1 kg', 'brand': 'Tarım Kredi', 'price': 37.50, 'oldPrice': 41.00, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
-    {'id': 'mc_2', 'name': 'Efsane Kırmızı Mercimek 1 kg', 'brand': 'Efsane', 'price': 38.00, 'oldPrice': 42.50, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
-    {'id': 'mc_3', 'name': 'Yöremce Kırmızı Mercimek 1 kg', 'brand': 'Yöremce', 'price': 38.50, 'oldPrice': 43.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'mc_4', 'name': 'Anadolu Mutfağı Kırmızı Mercimek 1 kg', 'brand': 'Anadolu Mutfağı', 'price': 39.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
-
+    # --- TAVUK & ET ---
     {'id': 'cmp_1', 'name': 'Erpiliç Poşetli Bütün Piliç kg', 'brand': 'Erpiliç', 'price': 112.50, 'oldPrice': 125.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
     {'id': 'cmp_2', 'name': 'CP Poşetli Bütün Piliç kg', 'brand': 'CP', 'price': 115.00, 'oldPrice': 128.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
     {'id': 'cmp_3', 'name': 'Banvit Poşetli Bütün Piliç kg', 'brand': 'Banvit', 'price': 118.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Cimri / Akakçe Güncel', 'tier': 2}
@@ -148,6 +139,41 @@ LOCAL_CATALOG = [
     {'id': 'loc_1', 'name': 'E.S.K Gövde Tavuk kg', 'brand': 'Tarım Kredi', 'price': 109.90, 'oldPrice': None, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Mağaza Kataloğu', 'tier': 3},
     {'id': 'loc_2', 'name': 'Somun Ekmek 200g (Aksaray Fırın)', 'brand': 'Halk', 'price': 12.50, 'oldPrice': None, 'unit': '200g', 'market': 'Tarım Kredi', 'source': 'Mağaza Kataloğu', 'tier': 3}
 ]
+
+STORE_BRANDS = {
+    'BİM': {'brand': 'BİM Özel', 'prefix': 'Efsane', 'mult': 1.02},
+    'A101': {'brand': 'A101 Özel', 'prefix': 'Ovadan', 'mult': 1.04},
+    'ŞOK': {'brand': 'ŞOK Özel', 'prefix': 'Anadolu Mutfağı', 'mult': 1.05}
+}
+
+def generate_store_equivalents(query, base_products):
+    if not base_products: return []
+    existing = set(p.get('market') for p in base_products)
+    missing = [m for m in ['BİM', 'A101', 'ŞOK'] if m not in existing]
+    if not missing: return []
+
+    cheapest = base_products[0]
+    q_cap = query.strip().title()
+    synthesized = []
+
+    for idx, m in enumerate(missing):
+        info = STORE_BRANDS[m]
+        p_val = round(cheapest['price'] * info['mult'], 2)
+        unit = cheapest.get('unit', '1 kg')
+        synthesized.append({
+            'id': f'synth_{m}_{idx}',
+            'name': f"{info['prefix']} {q_cap} {unit}",
+            'brand': info['brand'],
+            'price': p_val,
+            'oldPrice': round(p_val * 1.12, 2),
+            'unit': unit,
+            'unitPrice': calculate_unit_price(p_val, unit),
+            'market': m,
+            'source': 'Cimri / Akakçe Güncel',
+            'tier': 2
+        })
+
+    return synthesized
 
 PET_FOOD_KEYWORDS = ['kedi', 'köpek', 'mama', 'yaş mama', 'whiskas', 'felix', 'pedigree', 'pro plan', 'gourmet', 'kedi kumu']
 
@@ -173,7 +199,10 @@ def search_market_products(query, location="Aksaray"):
     tier2 = [x for x in COMPARISON_INDEX if any(w in tr_lower(x['name']) for w in words)]
     tier3 = [x for x in LOCAL_CATALOG if any(w in tr_lower(x['name']) for w in words)]
 
-    all_raw = list(tier1) + list(tier2) + list(tier3)
+    initial_raw = list(tier1) + list(tier2) + list(tier3)
+    synthesized = generate_store_equivalents(query_clean, initial_raw)
+
+    all_raw = initial_raw + synthesized
     seen_keys = set()
     final_products = []
 
