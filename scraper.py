@@ -88,7 +88,7 @@ def fetch_tkkoop_live(query):
     try:
         url = f'https://www.tkkoop.com.tr/arama?ara={requests.utils.quote(query)}'
         headers = {'User-Agent': 'Mozilla/5.0'}
-        response = requests.get(url, headers=headers, timeout=5)
+        response = requests.get(url, headers=headers, timeout=4)
         if response.status_code != 200: return []
 
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -133,8 +133,8 @@ AUTHENTIC_MARKET_DATABASE = [
     {'id': 'fd_2', 'name': 'Simbat Kabuklu Fındık 500g', 'brand': 'Simbat', 'price': 89.00, 'oldPrice': 99.00, 'unit': '500g', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
     {'id': 'fd_3', 'name': 'Çerezya Kavrulmuş Fındık İçi 150g', 'brand': 'Çerezya', 'price': 76.00, 'oldPrice': 86.00, 'unit': '150g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
     {'id': 'fd_4', 'name': 'Çerezya Kabuklu Fındık 500g', 'brand': 'Çerezya', 'price': 92.00, 'oldPrice': 102.00, 'unit': '500g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'fd_5', 'name': 'Amigo Kavrulmuş Fındık İçi 150g', 'brand': 'Amigo', 'price': 75.00, 'oldPrice': None, 'unit': '150g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
-    {'id': 'fd_6', 'name': 'Amigo Kabuklu Fındık 500g', 'brand': 'Amigo', 'price': 90.00, 'oldPrice': None, 'unit': '500g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+    {'id': 'fd_5', 'name': 'Amigo Kavrulmuş Fındık İçi 150g', 'brand': 'Amigo', 'price': 75.00, 'oldPrice': null, 'unit': '150g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+    {'id': 'fd_6', 'name': 'Amigo Kabuklu Fındık 500g', 'brand': 'Amigo', 'price': 90.00, 'oldPrice': null, 'unit': '500g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
     {'id': 'fd_7', 'name': 'Tarım Kredi Kavrulmuş Fındık İçi 150g', 'brand': 'Tarım Kredi', 'price': 72.00, 'oldPrice': 80.00, 'unit': '150g', 'market': 'Tarım Kredi', 'source': 'Mağaza Kataloğu', 'tier': 3},
     {'id': 'fd_8', 'name': 'Tarım Kredi Kabuklu Fındık 500g', 'brand': 'Tarım Kredi', 'price': 85.00, 'oldPrice': 95.00, 'unit': '500g', 'market': 'Tarım Kredi', 'source': 'Mağaza Kataloğu', 'tier': 3},
 
@@ -181,6 +181,16 @@ def search_market_products(query, location="Aksaray"):
     words = [w for w in q_norm.split() if len(w) >= 2]
 
     tier1 = fetch_tkkoop_live(query_clean)
+    
+    # Fallback to local DB if live scraper gets blocked on cloud hosting
+    if not tier1:
+        try:
+            if os.path.exists(DB_FILE):
+                with open(DB_FILE, "r", encoding="utf-8") as f:
+                    db_data = json.load(f)
+                tier1 = [x for x in db_data if all(w in tr_lower(x.get('name', '')) for w in words)]
+        except Exception: pass
+
     authentic_matches = [x for x in AUTHENTIC_MARKET_DATABASE if all(w in tr_lower(x['name']) for w in words)]
 
     all_raw = list(tier1) + authentic_matches

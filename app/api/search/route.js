@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
+import fs from 'fs';
+import path from 'path';
 
 function trLower(text) {
   if (!text) return '';
@@ -112,7 +114,7 @@ async function fetchTkKoopLive(query) {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
       },
-      timeout: 5000
+      timeout: 4000
     });
 
     if (response.status !== 200) return [];
@@ -185,12 +187,6 @@ const AUTHENTIC_MARKET_DATABASE = [
   { id: 'kh_2', name: 'Keyfe Türk Kahvesi 100g', brand: 'Keyfe', price: 32.50, oldPrice: 36.00, unit: '100g', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
   { id: 'kh_3', name: 'Crown Türk Kahvesi 100g', brand: 'Crown', price: 33.00, oldPrice: null, unit: '100g', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
   { id: 'kh_4', name: 'Tarım Kredi Türk Kahvesi 100g', brand: 'Tarım Kredi', price: 29.50, oldPrice: 34.00, unit: '100g', market: 'Tarım Kredi', source: 'Mağaza Kataloğu', tier: 3 },
-
-  // --- BAL & REÇEL ---
-  { id: 'bl_1', name: 'Binvezir Süzme Çiçek Balı 850g', brand: 'Binvezir', price: 125.00, oldPrice: 139.00, unit: '850g', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'bl_2', name: 'Balye Süzme Çiçek Balı 850g', brand: 'Balye', price: 128.00, oldPrice: 142.00, unit: '850g', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'bl_3', name: 'Anavarza Süzme Çiçek Balı 850g', brand: 'Anavarza', price: 135.00, oldPrice: null, unit: '850g', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
-  { id: 'bl_4', name: 'Tarım Kredi Süzme Çiçek Balı 850g', brand: 'Tarım Kredi', price: 119.00, oldPrice: 135.00, unit: '850g', market: 'Tarım Kredi', source: 'Mağaza Kataloğu', tier: 3 },
 
   // --- SODA & MADEN SUYU ---
   { id: 'sd_1', name: 'Kınık Sade Maden Suyu 6x200ml', brand: 'Kınık', price: 29.50, oldPrice: 34.00, unit: '6x200ml', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
@@ -300,7 +296,36 @@ export async function GET(request) {
   const words = qNorm.split(/\s+/).filter(w => w.length >= 2);
 
   // 1. KADEME: Canlı Tarım Kredi Scraper (tkkoop.com.tr)
-  const tier1Live = await fetchTkKoopLive(query);
+  let tier1Live = await fetchTkKoopLive(query);
+
+  // Vercel / Cloudflare engeline karşı prices_db.json hibrit yedek veri tabanı
+  if (tier1Live.length === 0) {
+    try {
+      const dbPath = path.join(process.cwd(), 'prices_db.json');
+      if (fs.existsSync(dbPath)) {
+        const fileContent = fs.readFileSync(dbPath, 'utf8');
+        const dbProducts = JSON.parse(fileContent);
+        
+        tier1Live = dbProducts.filter(item => {
+          const n = trLower(item.name);
+          return words.every(w => n.includes(w)) || (words.length === 0 && n.includes(qNorm));
+        }).map((item, idx) => ({
+          id: `tk_db_${idx}`,
+          name: item.name,
+          brand: item.brand || 'Tarım Kredi',
+          price: item.price,
+          oldPrice: null,
+          unit: item.unit || '1 adet',
+          unitPrice: calculateUnitPrice(item.price, item.unit),
+          market: 'Tarım Kredi',
+          source: 'tkkoop.com.tr (Doğrulanmış)',
+          tier: 1
+        }));
+      }
+    } catch (err) {
+      console.log('Error reading prices_db.json fallback:', err.message);
+    }
+  }
 
   // 2. KADEME & 3. KADEME: Cimri.com, Akakce.com, Enucuzgo & Yerel Broşür Veri Tabanı
   const authenticMatches = AUTHENTIC_MARKET_DATABASE.filter(item => {
@@ -318,8 +343,6 @@ export async function GET(request) {
     return words.every(w => n.includes(w) || b.includes(w)) || (words.length === 1 && (n.includes(qNorm) || b.includes(qNorm)));
   });
 
-  // UYARI: Sallamasyon/yapay veri kirliliği olmaması için yapay ürün üretecini (generateDynamicEquivalents) tamamen kapattık!
-  // Sadece gerçek ve doğrulanmış fiyatlar listelenir.
   const allRaw = [...tier1Live, ...authenticMatches];
   const seen = new Set();
   const finalProducts = [];
