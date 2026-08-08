@@ -2,6 +2,7 @@ import re
 import json
 import os
 import requests
+import pandas as pd
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -28,6 +29,16 @@ def save_price(product_name, market, price, unit):
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
         print(f"DB save error: {e}")
+
+def get_price_history(product_name):
+    init_db()
+    try:
+        with open(DB_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        filtered = [x for x in data if tr_lower(product_name) in tr_lower(x.get("product_name", ""))]
+        return pd.DataFrame(filtered) if filtered else pd.DataFrame()
+    except Exception:
+        return pd.DataFrame()
 
 def tr_lower(text):
     if not text:
@@ -126,8 +137,8 @@ COMPARISON_INDEX = [
     # --- PİRİNÇ ---
     {'id': 'pr_1', 'name': 'Tarım Kredi Anadolu Osmancık Pirinç 1 kg', 'brand': 'Tarım Kredi', 'price': 38.90, 'oldPrice': 42.00, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
     {'id': 'pr_2', 'name': 'Efsane Osmancık Pirinç 1 kg', 'brand': 'Efsane', 'price': 39.50, 'oldPrice': 44.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
-    {'id': 'pr_3', 'name': 'Ovadan Osmancık Pirinç 1 kg', brand: 'Ovadan', price: 40.00, 'oldPrice': 45.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'pr_4', 'name': 'Anadolu Mutfağı Osmancık Pirinç 1 kg', brand: 'Anadolu Mutfağı', price: 41.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+    {'id': 'pr_3', 'name': 'Ovadan Osmancık Pirinç 1 kg', 'brand': 'Ovadan', 'price': 40.00, 'oldPrice': 45.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
+    {'id': 'pr_4', 'name': 'Anadolu Mutfağı Osmancık Pirinç 1 kg', 'brand': 'Anadolu Mutfağı', 'price': 41.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
 
     # --- TAVUK & ET ---
     {'id': 'cmp_1', 'name': 'Erpiliç Poşetli Bütün Piliç kg', 'brand': 'Erpiliç', 'price': 112.50, 'oldPrice': 125.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
