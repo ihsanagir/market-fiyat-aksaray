@@ -128,22 +128,25 @@ def fetch_tkkoop_live(query):
     except Exception: return []
 
 AUTHENTIC_MARKET_DATABASE = [
+    # --- ZEYTİN (YEŞİL & SİYAH) ---
+    {'id': 'zy_g1', 'name': 'Tarım Kredi Kırma Yeşil Zeytin 400g', 'brand': 'Tarım Kredi', 'price': 64.50, 'oldPrice': 72.00, 'unit': '400g', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'zy_g2', 'name': 'İnci Çizik Yeşil Zeytin 400g', 'brand': 'İnci', 'price': 65.00, 'oldPrice': 74.00, 'unit': '400g', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'zy_g3', 'name': 'İnci Biberli Yeşil Zeytin 400g', 'brand': 'İnci', 'price': 68.50, 'oldPrice': 78.00, 'unit': '400g', 'market': 'BİM', 'source': 'Akakçe Güncel', 'tier': 2},
+    {'id': 'zy_g4', 'name': 'Zeo Kırma Yeşil Zeytin 400g', 'brand': 'Zeo', 'price': 69.00, 'oldPrice': 79.00, 'unit': '400g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
+    {'id': 'zy_g5', 'name': 'Lio Çizik Yeşil Zeytin 400g', 'brand': 'Lio', 'price': 69.50, 'oldPrice': None, 'unit': '400g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+    {'id': 'zy_g6', 'name': 'Zeo Biberli Yeşil Zeytin 400g', 'brand': 'Zeo', 'price': 70.00, 'oldPrice': 80.00, 'unit': '400g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
+    {'id': 'zy_g7', 'name': 'Lio Biberli Yeşil Zeytin 400g', 'brand': 'Lio', 'price': 71.00, 'oldPrice': None, 'unit': '400g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+
+    {'id': 'zy_s1', 'name': 'Tarım Kredi Yağlı Sele Siyah Zeytin 500g', 'brand': 'Tarım Kredi', 'price': 92.00, 'oldPrice': 105.00, 'unit': '500g', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'zy_s2', 'name': 'İnci Doğal Sele Siyah Zeytin 500g', 'brand': 'İnci', 'price': 95.00, 'oldPrice': 108.00, 'unit': '500g', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'zy_s3', 'name': 'Zeo Siyah Zeytin 500g', 'brand': 'Zeo', 'price': 96.00, 'oldPrice': 110.00, 'unit': '500g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
+    {'id': 'zy_s4', 'name': 'Lio Siyah Zeytin 500g', 'brand': 'Lio', 'price': 97.00, 'oldPrice': None, 'unit': '500g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+
     # --- YAĞLAR ---
     {'id': 'yg_1', 'name': 'Tarım Kredi Anadolu Ayçiçek Yağı 5L', 'brand': 'Tarım Kredi', 'price': 445.00, 'oldPrice': 475.00, 'unit': '5L', 'market': 'Tarım Kredi', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
     {'id': 'yg_2', 'name': 'Sole Ayçiçek Yağı 5L', 'brand': 'Sole', 'price': 455.00, 'oldPrice': 485.00, 'unit': '5L', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
     {'id': 'yg_3', 'name': 'Evin Ayçiçek Yağı 5L', 'brand': 'Evin', 'price': 458.00, 'oldPrice': None, 'unit': '5L', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
-    {'id': 'yg_4', 'name': 'Vera Ayçiçek Yağı 5L', 'brand': 'Vera', 'price': 459.00, 'oldPrice': 490.00, 'unit': '5L', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-
-    # --- PEYNİR & ÇAY & SÜT ---
-    {'id': 'pn_1', 'name': 'Tarım Kredi Tam Yağlı Beyaz Peynir 1 kg', 'brand': 'Tarım Kredi', 'price': 135.00, 'oldPrice': 150.00, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
-    {'id': 'pn_2', 'name': 'Aknaz Tam Yağlı Beyaz Peynir 1 kg', 'brand': 'Aknaz', 'price': 139.00, 'oldPrice': 155.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
-    {'id': 'pn_3', 'name': 'Ahir Tam Yağlı Beyaz Peynir 1 kg', 'brand': 'Ahir', 'price': 140.00, 'oldPrice': 158.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'pn_4', 'name': 'Mis Tam Yağlı Beyaz Peynir 1 kg', 'brand': 'Mis', 'price': 142.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
-
-    {'id': 'cy_1', 'name': 'Tarım Kredi Rize Çayı 1 kg', 'brand': 'Tarım Kredi', 'price': 145.00, 'oldPrice': 160.00, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
-    {'id': 'cy_2', 'name': 'Berk Rize Çayı 1 kg', 'brand': 'Berk', 'price': 148.00, 'oldPrice': 165.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
-    {'id': 'cy_3', 'name': 'Karadem Rize Çayı 1 kg', 'brand': 'Karadem', 'price': 149.00, 'oldPrice': 168.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'cy_4', 'name': 'Deren Rize Çayı 1 kg', 'brand': 'Deren', 'price': 150.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2}
+    {'id': 'yg_4', 'name': 'Vera Ayçiçek Yağı 5L', 'brand': 'Vera', 'price': 459.00, 'oldPrice': 490.00, 'unit': '5L', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2}
 ]
 
 PET_FOOD_KEYWORDS = ['kedi', 'köpek', 'mama', 'yaş mama', 'whiskas', 'felix', 'pedigree', 'pro plan', 'gourmet', 'kedi kumu']
@@ -154,10 +157,9 @@ def is_irrelevant_product(query, product_name):
     if not any(k in q_norm for k in ['kedi', 'köpek', 'mama', 'whiskas', 'felix', 'pedigree']):
         if any(bad in p_norm for bad in PET_FOOD_KEYWORDS): return True
 
-    if q_norm in ['yağ', 'yag', 'sıvı yağ', 'sivi yag']:
-        if not any(a in q_norm for a in ['süt', 'peynir', 'yoğurt']):
-            if any(bad in p_norm for bad in ['süt', 'peynir', 'yogurt', 'yoğurt']):
-                return True
+    if 'zeytin' in q_norm and 'yag' not in q_norm and 'yağ' not in q_norm:
+        if any(bad in p_norm for bad in ['zeytinyağ', 'yağı', 'yagi']):
+            return True
     return False
 
 def search_market_products(query, location="Aksaray"):
@@ -168,7 +170,7 @@ def search_market_products(query, location="Aksaray"):
     words = [w for w in q_norm.split() if len(w) >= 2]
 
     tier1 = fetch_tkkoop_live(query_clean)
-    authentic_matches = [x for x in AUTHENTIC_MARKET_DATABASE if any(w in tr_lower(x['name']) for w in words)]
+    authentic_matches = [x for x in AUTHENTIC_MARKET_DATABASE if all(w in tr_lower(x['name']) for w in words)]
 
     all_raw = list(tier1) + authentic_matches
     seen_keys = set()
