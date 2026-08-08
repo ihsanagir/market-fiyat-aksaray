@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { Search, ShoppingCart, TrendingUp, MapPin, X, Plus, Trash2, CheckCircle2, Sparkles } from 'lucide-react';
 
 export default function Home() {
-  const [query, setQuery] = useState('Poşet Tavuk');
-  const [searchInput, setSearchInput] = useState('Poşet Tavuk');
+  const [query, setQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [location, setLocation] = useState('Aksaray Merkez');
   const [selectedMarket, setSelectedMarket] = useState('Tümü');
   const [products, setProducts] = useState([]);
@@ -16,9 +16,13 @@ export default function Home() {
 
   // Arama Fonksiyonu
   const fetchProducts = async (searchTerm) => {
+    if (!searchTerm || !searchTerm.trim()) {
+      setProducts([]);
+      return;
+    }
     setLoading(true);
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(searchTerm)}`);
+      const res = await fetch(`/api/search?q=${encodeURIComponent(searchTerm.trim())}`);
       const data = await res.json();
       setProducts(data.products || []);
     } catch (err) {
@@ -29,7 +33,9 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchProducts(query);
+    if (query) {
+      fetchProducts(query);
+    }
   }, [query]);
 
   const handleSearchSubmit = (e) => {
@@ -210,121 +216,146 @@ export default function Home() {
           ))}
         </div>
 
-        {/* ARAMA BAŞLIĞI */}
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-emerald-600" />
-            <span>En Ucuz 3 Ürün</span>
-            <span className="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full text-xs">
-              "{query}"
-            </span>
-          </h2>
-          <span className="text-xs text-slate-500 font-medium">{filteredProducts.length} ürün bulundu</span>
-        </div>
-
-        {/* YÜKLENİYOR DURUMU */}
-        {loading && (
-          <div className="py-12 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-600 border-t-transparent"></div>
-            <p className="text-xs text-slate-500 font-medium mt-2">Güncel fiyatlar taranıyor...</p>
-          </div>
-        )}
-
-        {/* 🏆 EN UCUZ 3 HİGHLİGHT KARTLARI */}
-        {!loading && top3.length > 0 && (
-          <div className="space-y-3.5 mb-6">
-            {top3.map((product, idx) => {
-              const ranks = [
-                { badge: '🥇 1. En Ucuz', border: 'border-2 border-emerald-500 bg-gradient-to-b from-emerald-50/60 via-white to-white shadow-emerald-100', medal: '🥇' },
-                { badge: '🥈 2. Sıra', border: 'border border-slate-300 bg-white shadow-slate-100', medal: '🥈' },
-                { badge: '🥉 3. Sıra', border: 'border border-amber-300 bg-amber-50/30 shadow-amber-100', medal: '🥉' }
-              ];
-              const rank = ranks[idx] || ranks[1];
-
-              return (
-                <div
-                  key={product.id}
-                  className={`rounded-2xl p-4 shadow-sm relative transition-all hover:shadow-md ${rank.border}`}
+        {/* ARAMA BAŞLIĞI / BOŞ DURUM VEYA ÜRÜN LİSTESİ */}
+        {!query ? (
+          <div className="py-8 px-4 bg-white rounded-2xl border border-emerald-100 shadow-sm text-center">
+            <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-3 font-bold text-xl">
+              🔍
+            </div>
+            <h3 className="text-sm font-extrabold text-slate-800 mb-1">Market Fiyat Karşılaştırması</h3>
+            <p className="text-xs text-slate-500 font-medium max-w-xs mx-auto mb-4">
+              Aramak istediğiniz ürünü yukarıdaki arama kutusuna yazabilir veya hızlı kategori butonlarına tıklayabilirsiniz.
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {['🥛 Tam Yağlı Süt', '🍗 Poşet Tavuk', '🍞 Somun Ekmek', '🥚 30\'lu Yumurta', '🫒 Sızma Zeytinyağı'].map((item) => (
+                <button
+                  key={item}
+                  onClick={() => handleQuickSearch(item.split(' ').slice(1).join(' '))}
+                  className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-emerald-100 transition-colors"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl flex-shrink-0 mt-0.5">{rank.medal}</span>
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-emerald-600" />
+                <span>En Ucuz 3 Ürün</span>
+                <span className="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full text-xs">
+                  "{query}"
+                </span>
+              </h2>
+              <span className="text-xs text-slate-500 font-medium">{filteredProducts.length} ürün bulundu</span>
+            </div>
+
+            {/* YÜKLENİYOR DURUMU */}
+            {loading && (
+              <div className="py-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-600 border-t-transparent"></div>
+                <p className="text-xs text-slate-500 font-medium mt-2">Güncel fiyatlar taranıyor...</p>
+              </div>
+            )}
+
+            {/* 🏆 EN UCUZ 3 HİGHLİGHT KARTLARI */}
+            {!loading && top3.length > 0 && (
+              <div className="space-y-3.5 mb-6">
+                {top3.map((product, idx) => {
+                  const ranks = [
+                    { badge: '🥇 1. En Ucuz', border: 'border-2 border-emerald-500 bg-gradient-to-b from-emerald-50/60 via-white to-white shadow-emerald-100', medal: '🥇' },
+                    { badge: '🥈 2. Sıra', border: 'border border-slate-300 bg-white shadow-slate-100', medal: '🥈' },
+                    { badge: '🥉 3. Sıra', border: 'border border-amber-300 bg-amber-50/30 shadow-amber-100', medal: '🥉' }
+                  ];
+                  const rank = ranks[idx] || ranks[1];
+
+                  return (
+                    <div
+                      key={product.id}
+                      className={`rounded-2xl p-4 shadow-sm relative transition-all hover:shadow-md ${rank.border}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <span className="text-2xl flex-shrink-0 mt-0.5">{rank.medal}</span>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getMarketBadgeClass(product.market)}`}>
+                                {product.market}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-semibold">{product.unit}</span>
+                            </div>
+                            <h3 className="text-sm font-bold text-slate-900 leading-snug">{product.name}</h3>
+                            <p className="text-xs text-slate-500 font-medium">{product.brand}</p>
+                          </div>
+                        </div>
+
+                        <div className="text-right flex-shrink-0">
+                          {product.oldPrice && (
+                            <div className="text-xs text-slate-400 line-through font-medium">{product.oldPrice.toFixed(2)} ₺</div>
+                          )}
+                          <div className="text-lg font-black text-slate-900 tracking-tight">{product.price.toFixed(2)} ₺</div>
+                          {product.unitPrice && (
+                            <div className="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded mt-1 inline-block">
+                              ⚡ {product.unitPrice.value} {product.unitPrice.label}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => addToCart(product)}
+                        className="w-full mt-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-200"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Listeye Ekle</span>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* 📋 DİĞER ÜRÜNLER */}
+            {!loading && others.length > 0 && (
+              <section className="mb-6">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Diğer Seçenekler</h3>
+                <div className="space-y-2.5">
+                  {others.map((product) => (
+                    <div key={product.id} className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm flex items-center justify-between gap-3">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-0.5">
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getMarketBadgeClass(product.market)}`}>
                             {product.market}
                           </span>
-                          <span className="text-[10px] text-slate-400 font-semibold">{product.unit}</span>
+                          <span className="text-[10px] text-slate-400 font-medium">{product.unit}</span>
                         </div>
-                        <h3 className="text-sm font-bold text-slate-900 leading-snug">{product.name}</h3>
-                        <p className="text-xs text-slate-500 font-medium">{product.brand}</p>
+                        <h4 className="text-xs font-bold text-slate-800">{product.name}</h4>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <div className="text-sm font-extrabold text-slate-900">{product.price.toFixed(2)} ₺</div>
+                        </div>
+                        <button
+                          onClick={() => addToCart(product)}
+                          className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 p-2 rounded-lg transition-colors"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-
-                    <div className="text-right flex-shrink-0">
-                      {product.oldPrice && (
-                        <div className="text-xs text-slate-400 line-through font-medium">{product.oldPrice.toFixed(2)} ₺</div>
-                      )}
-                      <div className="text-lg font-black text-slate-900 tracking-tight">{product.price.toFixed(2)} ₺</div>
-                      {product.unitPrice && (
-                        <div className="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded mt-1 inline-block">
-                          ⚡ {product.unitPrice.value} {product.unitPrice.label}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => addToCart(product)}
-                    className="w-full mt-3 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-200"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Listeye Ekle</span>
-                  </button>
+                  ))}
                 </div>
-              );
-            })}
-          </div>
-        )}
+              </section>
+            )}
 
-        {/* 📋 DİĞER ÜRÜNLER */}
-        {!loading && others.length > 0 && (
-          <section className="mb-6">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Diğer Seçenekler</h3>
-            <div className="space-y-2.5">
-              {others.map((product) => (
-                <div key={product.id} className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-sm flex items-center justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getMarketBadgeClass(product.market)}`}>
-                        {product.market}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-medium">{product.unit}</span>
-                    </div>
-                    <h4 className="text-xs font-bold text-slate-800">{product.name}</h4>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <div className="text-sm font-extrabold text-slate-900">{product.price.toFixed(2)} ₺</div>
-                    </div>
-                    <button
-                      onClick={() => addToCart(product)}
-                      className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 p-2 rounded-lg transition-colors"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {!loading && filteredProducts.length === 0 && (
-          <div className="py-12 text-center bg-white rounded-2xl border border-slate-200 p-6">
-            <p className="text-sm text-slate-600 font-medium">"{query}" araması için uygun ürün bulunamadı.</p>
-          </div>
+            {!loading && filteredProducts.length === 0 && (
+              <div className="py-12 text-center bg-white rounded-2xl border border-slate-200 p-6">
+                <p className="text-sm text-slate-600 font-medium">"{query}" araması için uygun ürün bulunamadı.</p>
+              </div>
+            )}
+          </>
         )}
       </main>
 
