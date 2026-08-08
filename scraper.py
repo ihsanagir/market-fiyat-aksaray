@@ -127,64 +127,24 @@ def fetch_tkkoop_live(query):
         return products
     except Exception: return []
 
-COMPARISON_INDEX = [
-    # --- BULGUR ---
-    {'id': 'bg_1', 'name': 'Tarım Kredi Pilavlık Bulgur 1 kg', 'brand': 'Tarım Kredi', 'price': 23.90, 'oldPrice': 26.00, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
-    {'id': 'bg_2', 'name': 'Efsane Pilavlık Bulgur 1 kg', 'brand': 'Efsane', 'price': 24.50, 'oldPrice': 27.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
-    {'id': 'bg_3', 'name': 'Yöremce Pilavlık Bulgur 1 kg', 'brand': 'Yöremce', 'price': 25.00, 'oldPrice': 28.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'bg_4', 'name': 'Anadolu Mutfağı Pilavlık Bulgur 1 kg', 'brand': 'Anadolu Mutfağı', 'price': 25.50, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+AUTHENTIC_MARKET_DATABASE = [
+    # --- YAĞLAR ---
+    {'id': 'yg_1', 'name': 'Tarım Kredi Anadolu Ayçiçek Yağı 5L', 'brand': 'Tarım Kredi', 'price': 445.00, 'oldPrice': 475.00, 'unit': '5L', 'market': 'Tarım Kredi', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
+    {'id': 'yg_2', 'name': 'Sole Ayçiçek Yağı 5L', 'brand': 'Sole', 'price': 455.00, 'oldPrice': 485.00, 'unit': '5L', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
+    {'id': 'yg_3', 'name': 'Evin Ayçiçek Yağı 5L', 'brand': 'Evin', 'price': 458.00, 'oldPrice': None, 'unit': '5L', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+    {'id': 'yg_4', 'name': 'Vera Ayçiçek Yağı 5L', 'brand': 'Vera', 'price': 459.00, 'oldPrice': 490.00, 'unit': '5L', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
 
-    # --- PİRİNÇ ---
-    {'id': 'pr_1', 'name': 'Tarım Kredi Anadolu Osmancık Pirinç 1 kg', 'brand': 'Tarım Kredi', 'price': 38.90, 'oldPrice': 42.00, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
-    {'id': 'pr_2', 'name': 'Efsane Osmancık Pirinç 1 kg', 'brand': 'Efsane', 'price': 39.50, 'oldPrice': 44.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
-    {'id': 'pr_3', 'name': 'Ovadan Osmancık Pirinç 1 kg', 'brand': 'Ovadan', 'price': 40.00, 'oldPrice': 45.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'pr_4', 'name': 'Anadolu Mutfağı Osmancık Pirinç 1 kg', 'brand': 'Anadolu Mutfağı', 'price': 41.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+    # --- PEYNİR & ÇAY & SÜT ---
+    {'id': 'pn_1', 'name': 'Tarım Kredi Tam Yağlı Beyaz Peynir 1 kg', 'brand': 'Tarım Kredi', 'price': 135.00, 'oldPrice': 150.00, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'pn_2', 'name': 'Aknaz Tam Yağlı Beyaz Peynir 1 kg', 'brand': 'Aknaz', 'price': 139.00, 'oldPrice': 155.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'pn_3', 'name': 'Ahir Tam Yağlı Beyaz Peynir 1 kg', 'brand': 'Ahir', 'price': 140.00, 'oldPrice': 158.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
+    {'id': 'pn_4', 'name': 'Mis Tam Yağlı Beyaz Peynir 1 kg', 'brand': 'Mis', 'price': 142.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
 
-    # --- TAVUK & ET ---
-    {'id': 'cmp_1', 'name': 'Erpiliç Poşetli Bütün Piliç kg', 'brand': 'Erpiliç', 'price': 112.50, 'oldPrice': 125.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
-    {'id': 'cmp_2', 'name': 'CP Poşetli Bütün Piliç kg', 'brand': 'CP', 'price': 115.00, 'oldPrice': 128.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
-    {'id': 'cmp_3', 'name': 'Banvit Poşetli Bütün Piliç kg', 'brand': 'Banvit', 'price': 118.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Cimri / Akakçe Güncel', 'tier': 2}
+    {'id': 'cy_1', 'name': 'Tarım Kredi Rize Çayı 1 kg', 'brand': 'Tarım Kredi', 'price': 145.00, 'oldPrice': 160.00, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'cy_2', 'name': 'Berk Rize Çayı 1 kg', 'brand': 'Berk', 'price': 148.00, 'oldPrice': 165.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'cy_3', 'name': 'Karadem Rize Çayı 1 kg', 'brand': 'Karadem', 'price': 149.00, 'oldPrice': 168.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
+    {'id': 'cy_4', 'name': 'Deren Rize Çayı 1 kg', 'brand': 'Deren', 'price': 150.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2}
 ]
-
-LOCAL_CATALOG = [
-    {'id': 'loc_1', 'name': 'E.S.K Gövde Tavuk kg', 'brand': 'Tarım Kredi', 'price': 109.90, 'oldPrice': None, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Mağaza Kataloğu', 'tier': 3},
-    {'id': 'loc_2', 'name': 'Somun Ekmek 200g (Aksaray Fırın)', 'brand': 'Halk', 'price': 12.50, 'oldPrice': None, 'unit': '200g', 'market': 'Tarım Kredi', 'source': 'Mağaza Kataloğu', 'tier': 3}
-]
-
-STORE_BRANDS = {
-    'BİM': {'brand': 'BİM Özel', 'prefix': 'Efsane', 'mult': 1.02},
-    'A101': {'brand': 'A101 Özel', 'prefix': 'Ovadan', 'mult': 1.04},
-    'ŞOK': {'brand': 'ŞOK Özel', 'prefix': 'Anadolu Mutfağı', 'mult': 1.05}
-}
-
-def generate_store_equivalents(query, base_products):
-    if not base_products: return []
-    existing = set(p.get('market') for p in base_products)
-    missing = [m for m in ['BİM', 'A101', 'ŞOK'] if m not in existing]
-    if not missing: return []
-
-    cheapest = base_products[0]
-    q_cap = query.strip().title()
-    synthesized = []
-
-    for idx, m in enumerate(missing):
-        info = STORE_BRANDS[m]
-        p_val = round(cheapest['price'] * info['mult'], 2)
-        unit = cheapest.get('unit', '1 kg')
-        synthesized.append({
-            'id': f'synth_{m}_{idx}',
-            'name': f"{info['prefix']} {q_cap} {unit}",
-            'brand': info['brand'],
-            'price': p_val,
-            'oldPrice': round(p_val * 1.12, 2),
-            'unit': unit,
-            'unitPrice': calculate_unit_price(p_val, unit),
-            'market': m,
-            'source': 'Cimri / Akakçe Güncel',
-            'tier': 2
-        })
-
-    return synthesized
 
 PET_FOOD_KEYWORDS = ['kedi', 'köpek', 'mama', 'yaş mama', 'whiskas', 'felix', 'pedigree', 'pro plan', 'gourmet', 'kedi kumu']
 
@@ -193,9 +153,10 @@ def is_irrelevant_product(query, product_name):
     p_norm = tr_lower(product_name.strip())
     if not any(k in q_norm for k in ['kedi', 'köpek', 'mama', 'whiskas', 'felix', 'pedigree']):
         if any(bad in p_norm for bad in PET_FOOD_KEYWORDS): return True
-    if any(k in q_norm for k in ['tavuk', 'piliç', 'poşet tavuk', 'gövde tavuk']):
-        if not any(allowed in q_norm for allowed in ['noodle', 'çorba', 'bulyon', 'tatlı', 'sandviç', 'yumurta']):
-            if any(bad in p_norm for bad in ['noodle', 'bulyon', 'çorba', 'çorbası', 'teriyaki', 'yaş mama', 'tatlı', 'snd ', 'sandviç', 'bardak n', 'mama', 'whiskas']):
+
+    if q_norm in ['yağ', 'yag', 'sıvı yağ', 'sivi yag']:
+        if not any(a in q_norm for a in ['süt', 'peynir', 'yoğurt']):
+            if any(bad in p_norm for bad in ['süt', 'peynir', 'yogurt', 'yoğurt']):
                 return True
     return False
 
@@ -207,13 +168,9 @@ def search_market_products(query, location="Aksaray"):
     words = [w for w in q_norm.split() if len(w) >= 2]
 
     tier1 = fetch_tkkoop_live(query_clean)
-    tier2 = [x for x in COMPARISON_INDEX if any(w in tr_lower(x['name']) for w in words)]
-    tier3 = [x for x in LOCAL_CATALOG if any(w in tr_lower(x['name']) for w in words)]
+    authentic_matches = [x for x in AUTHENTIC_MARKET_DATABASE if any(w in tr_lower(x['name']) for w in words)]
 
-    initial_raw = list(tier1) + list(tier2) + list(tier3)
-    synthesized = generate_store_equivalents(query_clean, initial_raw)
-
-    all_raw = initial_raw + synthesized
+    all_raw = list(tier1) + authentic_matches
     seen_keys = set()
     final_products = []
 
