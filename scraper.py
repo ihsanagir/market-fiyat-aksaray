@@ -56,6 +56,8 @@ def normalize_market_name(name):
     if 'a101' in lower: return 'A101'
     if 'sok' in lower or 'şok' in lower: return 'ŞOK'
     if 'tarim' in lower or 'koop' in lower: return 'Tarım Kredi'
+    if 'migros' in lower: return 'Migros'
+    if 'carrefour' in lower: return 'CarrefourSA'
     return name
 
 def calculate_unit_price(price, unit):
@@ -83,6 +85,58 @@ def calculate_unit_price(price, unit):
         if lt > 0: return {"value": round(price / lt, 2), "label": "₺/L"}
             
     return None
+
+def fetch_official_market_api(query):
+    try:
+        lat, lng, distance = 38.3687, 34.0253, 15
+        
+        # 1. Get nearest depots
+        depots_url = 'https://api.marketfiyati.org.tr/api/v2/nearest'
+        depots_res = requests.post(depots_url, json={
+            "latitude": lat, "longitude": lng, "distance": distance
+        }, headers={"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"}, timeout=5)
+        
+        if depots_res.status_code != 200 or not depots_res.json(): return []
+        depot_ids = [d['id'] for d in depots_res.json()]
+        
+        # 2. Search products
+        search_url = 'https://api.marketfiyati.org.tr/api/v2/search'
+        search_res = requests.post(search_url, json={
+            "keywords": query.strip(),
+            "pages": 0, "size": 40,
+            "latitude": lat, "longitude": lng, "distance": distance,
+            "depots": depot_ids
+        }, headers={"Content-Type": "application/json", "User-Agent": "Mozilla/5.0"}, timeout=5)
+        
+        if search_res.status_code != 200 or not search_res.json(): return []
+        content = search_res.json().get('content') or []
+        products = []
+        
+        for prod in content:
+            title = prod.get('title') or ''
+            brand = prod.get('brand') or ''
+            unit = prod.get('refinedVolumeOrWeight') or prod.get('refinedQuantityUnit') or '1 adet'
+            
+            for dep in prod.get('productDepotInfoList') or []:
+                market = normalize_market_name(dep.get('marketAdi'))
+                price = float(dep.get('price') or 0)
+                if price > 0 and title:
+                    pct = float(dep.get('percentage') or 0)
+                    old_price = round(price / (1 - pct/100), 2) if pct > 0 else None
+                    products.append({
+                        'id': f"{prod.get('id')}_{dep.get('depotId')}",
+                        'name': title,
+                        'brand': brand or market,
+                        'price': price,
+                        'oldPrice': old_price,
+                        'unit': unit,
+                        'unitPrice': calculate_unit_price(price, unit),
+                        'market': market,
+                        'source': f"marketfiyati.org.tr (Resmi | {dep.get('depotName')})",
+                        'tier': 1
+                    })
+        return products
+    except Exception: return []
 
 def fetch_tkkoop_live(query):
     try:
@@ -121,7 +175,7 @@ def fetch_tkkoop_live(query):
                             'unitPrice': calculate_unit_price(price_val, unit),
                             'market': 'Tarım Kredi',
                             'source': 'tkkoop.com.tr (Canlı)',
-                            'tier': 1
+                            'tier': 2
                         })
                 except Exception: pass
         return products
@@ -129,35 +183,35 @@ def fetch_tkkoop_live(query):
 
 AUTHENTIC_MARKET_DATABASE = [
     # --- FINDIK ---
-    {'id': 'fd_1', 'name': 'Simbat Kavrulmuş Fındık İçi 150g', 'brand': 'Simbat', 'price': 74.50, 'oldPrice': 84.00, 'unit': '150g', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
-    {'id': 'fd_2', 'name': 'Simbat Kabuklu Fındık 500g', 'brand': 'Simbat', 'price': 89.00, 'oldPrice': 99.00, 'unit': '500g', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
-    {'id': 'fd_3', 'name': 'Çerezya Kavrulmuş Fındık İçi 150g', 'brand': 'Çerezya', 'price': 76.00, 'oldPrice': 86.00, 'unit': '150g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'fd_4', 'name': 'Çerezya Kabuklu Fındık 500g', 'brand': 'Çerezya', 'price': 92.00, 'oldPrice': 102.00, 'unit': '500g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'fd_5', 'name': 'Amigo Kavrulmuş Fındık İçi 150g', 'brand': 'Amigo', 'price': 75.00, 'oldPrice': null, 'unit': '150g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
-    {'id': 'fd_6', 'name': 'Amigo Kabuklu Fındık 500g', 'brand': 'Amigo', 'price': 90.00, 'oldPrice': null, 'unit': '500g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+    {'id': 'fd_1', 'name': 'Simbat Kavrulmuş Fındık İçi 150g', 'brand': 'Simbat', 'price': 74.50, 'oldPrice': 84.00, 'unit': '150g', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 3},
+    {'id': 'fd_2', 'name': 'Simbat Kabuklu Fındık 500g', 'brand': 'Simbat', 'price': 89.00, 'oldPrice': 99.00, 'unit': '500g', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 3},
+    {'id': 'fd_3', 'name': 'Çerezya Kavrulmuş Fındık İçi 150g', 'brand': 'Çerezya', 'price': 76.00, 'oldPrice': 86.00, 'unit': '150g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 3},
+    {'id': 'fd_4', 'name': 'Çerezya Kabuklu Fındık 500g', 'brand': 'Çerezya', 'price': 92.00, 'oldPrice': 102.00, 'unit': '500g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 3},
+    {'id': 'fd_5', 'name': 'Amigo Kavrulmuş Fındık İçi 150g', 'brand': 'Amigo', 'price': 75.00, 'oldPrice': null, 'unit': '150g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 3},
+    {'id': 'fd_6', 'name': 'Amigo Kabuklu Fındık 500g', 'brand': 'Amigo', 'price': 90.00, 'oldPrice': null, 'unit': '500g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 3},
     {'id': 'fd_7', 'name': 'Tarım Kredi Kavrulmuş Fındık İçi 150g', 'brand': 'Tarım Kredi', 'price': 72.00, 'oldPrice': 80.00, 'unit': '150g', 'market': 'Tarım Kredi', 'source': 'Mağaza Kataloğu', 'tier': 3},
     {'id': 'fd_8', 'name': 'Tarım Kredi Kabuklu Fındık 500g', 'brand': 'Tarım Kredi', 'price': 85.00, 'oldPrice': 95.00, 'unit': '500g', 'market': 'Tarım Kredi', 'source': 'Mağaza Kataloğu', 'tier': 3},
 
     # --- KAHVE ---
-    {'id': 'kh_1', 'name': 'Abdullah Efendi Türk Kahvesi 100g', 'brand': 'Abdullah Efendi', 'price': 31.50, 'oldPrice': 35.00, 'unit': '100g', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
-    {'id': 'kh_2', 'name': 'Keyfe Türk Kahvesi 100g', 'brand': 'Keyfe', 'price': 32.50, 'oldPrice': 36.00, 'unit': '100g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'kh_3', 'name': 'Crown Türk Kahvesi 100g', 'brand': 'Crown', 'price': 33.00, 'oldPrice': null, 'unit': '100g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+    {'id': 'kh_1', 'name': 'Abdullah Efendi Türk Kahvesi 100g', 'brand': 'Abdullah Efendi', 'price': 31.50, 'oldPrice': 35.00, 'unit': '100g', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 3},
+    {'id': 'kh_2', 'name': 'Keyfe Türk Kahvesi 100g', 'brand': 'Keyfe', 'price': 32.50, 'oldPrice': 36.00, 'unit': '100g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 3},
+    {'id': 'kh_3', 'name': 'Crown Türk Kahvesi 100g', 'brand': 'Crown', 'price': 33.00, 'oldPrice': null, 'unit': '100g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 3},
     {'id': 'kh_4', 'name': 'Tarım Kredi Türk Kahvesi 100g', 'brand': 'Tarım Kredi', 'price': 29.50, 'oldPrice': 34.00, 'unit': '100g', 'market': 'Tarım Kredi', 'source': 'Mağaza Kataloğu', 'tier': 3},
 
     # --- ZEYTİN (YEŞİL & SİYAH) ---
-    {'id': 'zy_g1', 'name': 'Tarım Kredi Kırma Yeşil Zeytin 400g', 'brand': 'Tarım Kredi', 'price': 64.50, 'oldPrice': 72.00, 'unit': '400g', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
-    {'id': 'zy_g2', 'name': 'İnci Çizik Yeşil Zeytin 400g', 'brand': 'İnci', 'price': 65.00, 'oldPrice': 74.00, 'unit': '400g', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
-    {'id': 'zy_g3', 'name': 'İnci Biberli Yeşil Zeytin 400g', 'brand': 'İnci', 'price': 68.50, 'oldPrice': 78.00, 'unit': '400g', 'market': 'BİM', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'zy_g4', 'name': 'Zeo Kırma Yeşil Zeytin 400g', 'brand': 'Zeo', 'price': 69.00, 'oldPrice': 79.00, 'unit': '400g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'zy_g5', 'name': 'Lio Çizik Yeşil Zeytin 400g', 'brand': 'Lio', 'price': 69.50, 'oldPrice': None, 'unit': '400g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
-    {'id': 'zy_g6', 'name': 'Zeo Biberli Yeşil Zeytin 400g', 'brand': 'Zeo', 'price': 70.00, 'oldPrice': 80.00, 'unit': '400g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'zy_g7', 'name': 'Lio Biberli Yeşil Zeytin 400g', 'brand': 'Lio', 'price': 71.00, 'oldPrice': None, 'unit': '400g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+    {'id': 'zy_g1', 'name': 'Tarım Kredi Kırma Yeşil Zeytin 400g', 'brand': 'Tarım Kredi', 'price': 64.50, 'oldPrice': 72.00, 'unit': '400g', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 3},
+    {'id': 'zy_g2', 'name': 'İnci Çizik Yeşil Zeytin 400g', 'brand': 'İnci', 'price': 65.00, 'oldPrice': 74.00, 'unit': '400g', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 3},
+    {'id': 'zy_g3', 'name': 'İnci Biberli Yeşil Zeytin 400g', 'brand': 'İnci', 'price': 68.50, 'oldPrice': 78.00, 'unit': '400g', 'market': 'BİM', 'source': 'Akakçe Güncel', 'tier': 3},
+    {'id': 'zy_g4', 'name': 'Zeo Kırma Yeşil Zeytin 400g', 'brand': 'Zeo', 'price': 69.00, 'oldPrice': 79.00, 'unit': '400g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 3},
+    {'id': 'zy_g5', 'name': 'Lio Çizik Yeşil Zeytin 400g', 'brand': 'Lio', 'price': 69.50, 'oldPrice': None, 'unit': '400g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 3},
+    {'id': 'zy_g6', 'name': 'Zeo Biberli Yeşil Zeytin 400g', 'brand': 'Zeo', 'price': 70.00, 'oldPrice': 80.00, 'unit': '400g', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 3},
+    {'id': 'zy_g7', 'name': 'Lio Biberli Yeşil Zeytin 400g', 'brand': 'Lio', 'price': 71.00, 'oldPrice': None, 'unit': '400g', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 3},
 
     # --- YAĞLAR ---
-    {'id': 'yg_1', 'name': 'Tarım Kredi Anadolu Ayçiçek Yağı 5L', 'brand': 'Tarım Kredi', 'price': 445.00, 'oldPrice': 475.00, 'unit': '5L', 'market': 'Tarım Kredi', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
-    {'id': 'yg_2', 'name': 'Sole Ayçiçek Yağı 5L', 'brand': 'Sole', 'price': 455.00, 'oldPrice': 485.00, 'unit': '5L', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
-    {'id': 'yg_3', 'name': 'Evin Ayçiçek Yağı 5L', 'brand': 'Evin', 'price': 458.00, 'oldPrice': None, 'unit': '5L', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
-    {'id': 'yg_4', 'name': 'Vera Ayçiçek Yağı 5L', 'brand': 'Vera', 'price': 459.00, 'oldPrice': 490.00, 'unit': '5L', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2}
+    {'id': 'yg_1', 'name': 'Tarım Kredi Anadolu Ayçiçek Yağı 5L', 'brand': 'Tarım Kredi', 'price': 445.00, 'oldPrice': 475.00, 'unit': '5L', 'market': 'Tarım Kredi', 'source': 'Cimri / Akakçe Güncel', 'tier': 3},
+    {'id': 'yg_2', 'name': 'Sole Ayçiçek Yağı 5L', 'brand': 'Sole', 'price': 455.00, 'oldPrice': 485.00, 'unit': '5L', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 3},
+    {'id': 'yg_3', 'name': 'Evin Ayçiçek Yağı 5L', 'brand': 'Evin', 'price': 458.00, 'oldPrice': None, 'unit': '5L', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 3},
+    {'id': 'yg_4', 'name': 'Vera Ayçiçek Yağı 5L', 'brand': 'Vera', 'price': 459.00, 'oldPrice': 490.00, 'unit': '5L', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 3}
 ]
 
 PET_FOOD_KEYWORDS = ['kedi', 'köpek', 'mama', 'yaş mama', 'whiskas', 'felix', 'pedigree', 'pro plan', 'gourmet', 'kedi kumu']
@@ -180,20 +234,25 @@ def search_market_products(query, location="Aksaray"):
     q_norm = tr_lower(query_clean)
     words = [w for w in q_norm.split() if len(w) >= 2]
 
-    tier1 = fetch_tkkoop_live(query_clean)
+    # KADEME 1: Sanayi Bakanlığı Resmi API (BİM, A101, ŞOK, Tarım Kredi...)
+    products_list = fetch_official_market_api(query_clean)
     
-    # Fallback to local DB if live scraper gets blocked on cloud hosting
-    if not tier1:
+    # KADEME 2: Canlı Tarım Kredi Scraper (Yedek)
+    if not products_list:
+        products_list = fetch_tkkoop_live(query_clean)
+
+    # KADEME 3: prices_db.json Çevrimdışı / Yedek Veri Tabanı
+    if not products_list:
         try:
             if os.path.exists(DB_FILE):
                 with open(DB_FILE, "r", encoding="utf-8") as f:
                     db_data = json.load(f)
-                tier1 = [x for x in db_data if all(w in tr_lower(x.get('name', '')) for w in words)]
+                products_list = [x for x in db_data if all(w in tr_lower(x.get('name', '')) for w in words)]
         except Exception: pass
 
     authentic_matches = [x for x in AUTHENTIC_MARKET_DATABASE if all(w in tr_lower(x['name']) for w in words)]
 
-    all_raw = list(tier1) + authentic_matches
+    all_raw = list(products_list) + authentic_matches
     seen_keys = set()
     final_products = []
 

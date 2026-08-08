@@ -21,12 +21,14 @@ function trLower(text) {
 
 function normalizeMarketName(name) {
   if (!name) return 'Tarım Kredi';
-  const lower = trLower(name).replace(/\s+/g, '');
+  const lower = name.toLowerCase().replace(/[\s_-]+/g, '');
   if (lower.includes('bim')) return 'BİM';
   if (lower.includes('a101')) return 'A101';
   if (lower.includes('sok') || lower.includes('şok')) return 'ŞOK';
   if (lower.includes('tarim') || lower.includes('koop')) return 'Tarım Kredi';
-  return name;
+  if (lower.includes('migros')) return 'Migros';
+  if (lower.includes('carrefour')) return 'CarrefourSA';
+  return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
 function calculateUnitPrice(price, unit) {
@@ -104,7 +106,93 @@ function isIrrelevantProduct(query, productName) {
 }
 
 // -----------------------------------------------------------------------------
-// 1. KADEME: TARIM KREDİ KOOP RESMİ CANLI WEB SİTESİ (tkkoop.com.tr)
+// TIER 1: T.C. Sanayi ve Teknoloji Bakanlığı Resmi Fiyat API'si (TÜBİTAK)
+// -----------------------------------------------------------------------------
+async function fetchOfficialMarketApi(query) {
+  try {
+    // Aksaray Merkez Koordinatları ve 15km Arama Mesafesi
+    const lat = 38.3687;
+    const lng = 34.0253;
+    const distance = 15;
+
+    // 1. Adım: En yakın mağazaları (depoları) al
+    const depotsResponse = await axios.post('https://api.marketfiyati.org.tr/api/v2/nearest', {
+      latitude: lat,
+      longitude: lng,
+      distance: distance
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0'
+      },
+      timeout: 5000
+    });
+
+    if (!depotsResponse.data || depotsResponse.data.length === 0) return [];
+
+    const depotIds = depotsResponse.data.map(d => d.id);
+
+    // 2. Adım: Bu mağazalardaki ürünleri ara
+    const searchResponse = await axios.post('https://api.marketfiyati.org.tr/api/v2/search', {
+      keywords: query.trim(),
+      pages: 0,
+      size: 40,
+      latitude: lat,
+      longitude: lng,
+      distance: distance,
+      depots: depotIds
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0'
+      },
+      timeout: 5000
+    });
+
+    const content = searchResponse.data.content || [];
+    const flattenedProducts = [];
+
+    content.forEach(prod => {
+      const title = prod.title || '';
+      const brand = prod.brand || '';
+      const unit = prod.refinedVolumeOrWeight || prod.refinedQuantityUnit || '1 adet';
+
+      if (prod.productDepotInfoList) {
+        prod.productDepotInfoList.forEach(depot => {
+          const market = normalizeMarketName(depot.marketAdi);
+          const price = parseFloat(depot.price);
+
+          if (price > 0 && title) {
+            const oldPrice = depot.percentage > 0 ? Number((price / (1 - depot.percentage / 100)).toFixed(2)) : null;
+            flattenedProducts.push({
+              id: `${prod.id}_${depot.depotId}`,
+              name: title,
+              brand: brand || market,
+              price: price,
+              oldPrice: oldPrice,
+              unit: unit,
+              unitPrice: calculateUnitPrice(price, unit),
+              market: market,
+              discount: Math.round(depot.percentage || 0),
+              source: `marketfiyati.org.tr (Resmi | ${depot.depotName})`,
+              tier: 1
+            });
+          }
+        });
+      }
+    });
+
+    return flattenedProducts;
+  } catch (e) {
+    console.error('Official Market API error:', e.message);
+    return [];
+  }
+}
+
+// -----------------------------------------------------------------------------
+// TIER 2: Tarım Kredi Canlı Web Scraper (tkkoop.com.tr)
 // -----------------------------------------------------------------------------
 async function fetchTkKoopLive(query) {
   try {
@@ -155,7 +243,7 @@ async function fetchTkKoopLive(query) {
               unitPrice: calculateUnitPrice(priceVal, unit),
               market: 'Tarım Kredi',
               source: 'tkkoop.com.tr (Canlı)',
-              tier: 1
+              tier: 2
             });
           }
         }
@@ -169,119 +257,50 @@ async function fetchTkKoopLive(query) {
 }
 
 // -----------------------------------------------------------------------------
-// 2. KADEME & 3. KADEME: %100 DOĞRULANMIŞ REAL-WORLD MARKET FİYAT VERİ TABANI
+// TIER 3: Çevrimdışı ve Yedek Veri Tabanı
 // -----------------------------------------------------------------------------
 const AUTHENTIC_MARKET_DATABASE = [
   // --- FINDIK ---
-  { id: 'fd_1', name: 'Simbat Kavrulmuş Fındık İçi 150g', brand: 'Simbat', price: 74.50, oldPrice: 84.00, unit: '150g', market: 'BİM', source: 'Cimri / Akakçe Güncel', tier: 2 },
-  { id: 'fd_2', name: 'Simbat Kabuklu Fındık 500g', brand: 'Simbat', price: 89.00, oldPrice: 99.00, unit: '500g', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'fd_3', name: 'Çerezya Kavrulmuş Fındık İçi 150g', brand: 'Çerezya', price: 76.00, oldPrice: 86.00, unit: '150g', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'fd_4', name: 'Çerezya Kabuklu Fındık 500g', brand: 'Çerezya', price: 92.00, oldPrice: 102.00, unit: '500g', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'fd_5', name: 'Amigo Kavrulmuş Fındık İçi 150g', brand: 'Amigo', price: 75.00, oldPrice: null, unit: '150g', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
-  { id: 'fd_6', name: 'Amigo Kabuklu Fındık 500g', brand: 'Amigo', price: 90.00, oldPrice: null, unit: '500g', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
+  { id: 'fd_1', name: 'Simbat Kavrulmuş Fındık İçi 150g', brand: 'Simbat', price: 74.50, oldPrice: 84.00, unit: '150g', market: 'BİM', source: 'Cimri / Akakçe Güncel', tier: 3 },
+  { id: 'fd_2', name: 'Simbat Kabuklu Fındık 500g', brand: 'Simbat', price: 89.00, oldPrice: 99.00, unit: '500g', market: 'BİM', source: 'Cimri Güncel', tier: 3 },
+  { id: 'fd_3', name: 'Çerezya Kavrulmuş Fındık İçi 150g', brand: 'Çerezya', price: 76.00, oldPrice: 86.00, unit: '150g', market: 'A101', source: 'Akakçe Güncel', tier: 3 },
+  { id: 'fd_4', name: 'Çerezya Kabuklu Fındık 500g', brand: 'Çerezya', price: 92.00, oldPrice: 102.00, unit: '500g', market: 'A101', source: 'Akakçe Güncel', tier: 3 },
+  { id: 'fd_5', name: 'Amigo Kavrulmuş Fındık İçi 150g', brand: 'Amigo', price: 75.00, oldPrice: null, unit: '150g', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 3 },
+  { id: 'fd_6', name: 'Amigo Kabuklu Fındık 500g', brand: 'Amigo', price: 90.00, oldPrice: null, unit: '500g', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 3 },
   { id: 'fd_7', name: 'Tarım Kredi Kavrulmuş Fındık İçi 150g', brand: 'Tarım Kredi', price: 72.00, oldPrice: 80.00, unit: '150g', market: 'Tarım Kredi', source: 'Mağaza Kataloğu', tier: 3 },
   { id: 'fd_8', name: 'Tarım Kredi Kabuklu Fındık 500g', brand: 'Tarım Kredi', price: 85.00, oldPrice: 95.00, unit: '500g', market: 'Tarım Kredi', source: 'Mağaza Kataloğu', tier: 3 },
 
   // --- KAHVE ---
-  { id: 'kh_1', name: 'Abdullah Efendi Türk Kahvesi 100g', brand: 'Abdullah Efendi', price: 31.50, oldPrice: 35.00, unit: '100g', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'kh_2', name: 'Keyfe Türk Kahvesi 100g', brand: 'Keyfe', price: 32.50, oldPrice: 36.00, unit: '100g', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'kh_3', name: 'Crown Türk Kahvesi 100g', brand: 'Crown', price: 33.00, oldPrice: null, unit: '100g', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
+  { id: 'kh_1', name: 'Abdullah Efendi Türk Kahvesi 100g', brand: 'Abdullah Efendi', price: 31.50, oldPrice: 35.00, unit: '100g', market: 'BİM', source: 'Cimri Güncel', tier: 3 },
+  { id: 'kh_2', name: 'Keyfe Türk Kahvesi 100g', brand: 'Keyfe', price: 32.50, oldPrice: 36.00, unit: '100g', market: 'A101', source: 'Akakçe Güncel', tier: 3 },
+  { id: 'kh_3', name: 'Crown Türk Kahvesi 100g', brand: 'Crown', price: 33.00, oldPrice: null, unit: '100g', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 3 },
   { id: 'kh_4', name: 'Tarım Kredi Türk Kahvesi 100g', brand: 'Tarım Kredi', price: 29.50, oldPrice: 34.00, unit: '100g', market: 'Tarım Kredi', source: 'Mağaza Kataloğu', tier: 3 },
 
   // --- SODA & MADEN SUYU ---
-  { id: 'sd_1', name: 'Kınık Sade Maden Suyu 6x200ml', brand: 'Kınık', price: 29.50, oldPrice: 34.00, unit: '6x200ml', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'sd_2', name: 'Beypazarı Sade Maden Suyu 6x200ml', brand: 'Beypazarı', price: 31.00, oldPrice: 36.00, unit: '6x200ml', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'sd_3', name: 'Sarıkız Sade Maden Suyu 6x200ml', brand: 'Sarıkız', price: 30.50, oldPrice: null, unit: '6x200ml', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
+  { id: 'sd_1', name: 'Kınık Sade Maden Suyu 6x200ml', brand: 'Kınık', price: 29.50, oldPrice: 34.00, unit: '6x200ml', market: 'BİM', source: 'Cimri Güncel', tier: 3 },
+  { id: 'sd_2', name: 'Beypazarı Sade Maden Suyu 6x200ml', brand: 'Beypazarı', price: 31.00, oldPrice: 36.00, unit: '6x200ml', market: 'A101', source: 'Akakçe Güncel', tier: 3 },
+  { id: 'sd_3', name: 'Sarıkız Sade Maden Suyu 6x200ml', brand: 'Sarıkız', price: 30.50, oldPrice: null, unit: '6x200ml', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 3 },
   { id: 'sd_4', name: 'Kızılay Sade Maden Suyu 6x200ml', brand: 'Kızılay', price: 28.00, oldPrice: 32.00, unit: '6x200ml', market: 'Tarım Kredi', source: 'Mağaza Kataloğu', tier: 3 },
 
   // --- ZEYTİN (YEŞİL & SİYAH) ---
-  { id: 'zy_g1', name: 'Tarım Kredi Kırma Yeşil Zeytin 400g', brand: 'Tarım Kredi', price: 64.50, oldPrice: 72.00, unit: '400g', market: 'Tarım Kredi', source: 'Cimri Güncel', tier: 2 },
-  { id: 'zy_g2', name: 'İnci Çizik Yeşil Zeytin 400g', brand: 'İnci', price: 65.00, oldPrice: 74.00, unit: '400g', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'zy_g3', name: 'İnci Biberli Yeşil Zeytin 400g', brand: 'İnci', price: 68.50, oldPrice: 78.00, unit: '400g', market: 'BİM', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'zy_g4', name: 'Zeo Kırma Yeşil Zeytin 400g', brand: 'Zeo', price: 69.00, oldPrice: 79.00, unit: '400g', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'zy_g5', name: 'Lio Çizik Yeşil Zeytin 400g', brand: 'Lio', price: 69.50, oldPrice: null, unit: '400g', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
-  { id: 'zy_g6', name: 'Zeo Biberli Yeşil Zeytin 400g', brand: 'Zeo', price: 70.00, oldPrice: 80.00, unit: '400g', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'zy_g7', name: 'Lio Biberli Yeşil Zeytin 400g', brand: 'Lio', price: 71.00, oldPrice: null, unit: '400g', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
+  { id: 'zy_g1', name: 'Tarım Kredi Kırma Yeşil Zeytin 400g', brand: 'Tarım Kredi', price: 64.50, oldPrice: 72.00, unit: '400g', market: 'Tarım Kredi', source: 'Cimri Güncel', tier: 3 },
+  { id: 'zy_g2', name: 'İnci Çizik Yeşil Zeytin 400g', brand: 'İnci', price: 65.00, oldPrice: 74.00, unit: '400g', market: 'BİM', source: 'Cimri Güncel', tier: 3 },
+  { id: 'zy_g3', name: 'İnci Biberli Yeşil Zeytin 400g', brand: 'İnci', price: 68.50, oldPrice: 78.00, unit: '400g', market: 'BİM', source: 'Akakçe Güncel', tier: 3 },
+  { id: 'zy_g4', name: 'Zeo Kırma Yeşil Zeytin 400g', brand: 'Zeo', price: 69.00, oldPrice: 79.00, unit: '400g', market: 'A101', source: 'Akakçe Güncel', tier: 3 },
+  { id: 'zy_g5', name: 'Lio Çizik Yeşil Zeytin 400g', brand: 'Lio', price: 69.50, oldPrice: null, unit: '400g', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 3 },
+  { id: 'zy_g6', name: 'Zeo Biberli Yeşil Zeytin 400g', brand: 'Zeo', price: 70.00, oldPrice: 80.00, unit: '400g', market: 'A101', source: 'Akakçe Güncel', tier: 3 },
+  { id: 'zy_g7', name: 'Lio Biberli Yeşil Zeytin 400g', brand: 'Lio', price: 71.00, oldPrice: null, unit: '400g', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 3 },
 
-  { id: 'zy_s1', name: 'Tarım Kredi Yağlı Sele Siyah Zeytin 500g', brand: 'Tarım Kredi', price: 92.00, oldPrice: 105.00, unit: '500g', market: 'Tarım Kredi', source: 'Cimri Güncel', tier: 2 },
-  { id: 'zy_s2', name: 'İnci Doğal Sele Siyah Zeytin 500g', brand: 'İnci', price: 95.00, oldPrice: 108.00, unit: '500g', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'zy_s3', name: 'Zeo Siyah Zeytin 500g', brand: 'Zeo', price: 96.00, oldPrice: 110.00, unit: '500g', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'zy_s4', name: 'Lio Siyah Zeytin 500g', brand: 'Lio', price: 97.00, oldPrice: null, unit: '500g', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
-  { id: 'zy_s5', name: 'Tarım Kredi Siyah Zeytin 1 kg', brand: 'Tarım Kredi', price: 135.00, oldPrice: 155.00, unit: '1 kg', market: 'Tarım Kredi', source: 'Mağaza Kataloğu', tier: 3 },
-  { id: 'zy_s6', name: 'İnci Siyah Zeytin 1 kg', brand: 'İnci', price: 138.00, oldPrice: 158.00, unit: '1 kg', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'zy_s7', name: 'Zeo Siyah Zeytin 1 kg', brand: 'Zeo', price: 140.00, oldPrice: 160.00, unit: '1 kg', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'zy_s8', name: 'Lio Siyah Zeytin 1 kg', brand: 'Lio', price: 142.00, oldPrice: null, unit: '1 kg', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
+  { id: 'zy_s1', name: 'Tarım Kredi Yağlı Sele Siyah Zeytin 500g', brand: 'Tarım Kredi', price: 92.00, oldPrice: 105.00, unit: '500g', market: 'Tarım Kredi', source: 'Cimri Güncel', tier: 3 },
+  { id: 'zy_s2', name: 'İnci Doğal Sele Siyah Zeytin 500g', brand: 'İnci', price: 95.00, oldPrice: 108.00, unit: '500g', market: 'BİM', source: 'Cimri Güncel', tier: 3 },
+  { id: 'zy_s3', name: 'Zeo Siyah Zeytin 500g', brand: 'Zeo', price: 96.00, oldPrice: 110.00, unit: '500g', market: 'A101', source: 'Akakçe Güncel', tier: 3 },
+  { id: 'zy_s4', name: 'Lio Siyah Zeytin 500g', brand: 'Lio', price: 97.00, oldPrice: null, unit: '500g', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 3 },
 
   // --- SIVI YAĞ & ZEYTİNYAĞI ---
-  { id: 'yg_1', name: 'Tarım Kredi Anadolu Ayçiçek Yağı 5L', brand: 'Tarım Kredi', price: 445.00, oldPrice: 475.00, unit: '5L', market: 'Tarım Kredi', source: 'Cimri / Akakçe Güncel', tier: 2 },
-  { id: 'yg_2', name: 'Sole Ayçiçek Yağı 5L', brand: 'Sole', price: 455.00, oldPrice: 485.00, unit: '5L', market: 'BİM', source: 'Cimri / Akakçe Güncel', tier: 2 },
-  { id: 'yg_3', name: 'Evin Ayçiçek Yağı 5L', brand: 'Evin', price: 458.00, oldPrice: null, unit: '5L', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
-  { id: 'yg_4', name: 'Vera Ayçiçek Yağı 5L', brand: 'Vera', price: 459.00, oldPrice: 490.00, unit: '5L', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-
-  { id: 'yg_5', name: 'Tarım Kredi Ayçiçek Yağı 1L', brand: 'Tarım Kredi', price: 96.00, oldPrice: 105.00, unit: '1L', market: 'Tarım Kredi', source: 'Mağaza Kataloğu', tier: 3 },
-  { id: 'yg_6', name: 'Sole Ayçiçek Yağı 1L', brand: 'Sole', price: 98.50, oldPrice: 108.00, unit: '1L', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'yg_7', name: 'Evin Ayçiçek Yağı 1L', brand: 'Evin', price: 98.90, oldPrice: null, unit: '1L', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
-  { id: 'yg_8', name: 'Vera Ayçiçek Yağı 1L', brand: 'Vera', price: 99.00, oldPrice: 110.00, unit: '1L', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-
-  { id: 'zy_1', name: 'Tarım Kredi Sızma Zeytinyağı 1L', brand: 'Tarım Kredi', price: 295.00, oldPrice: 325.00, unit: '1L', market: 'Tarım Kredi', source: 'Cimri Güncel', tier: 2 },
-  { id: 'zy_2', name: 'Sırım Sızma Zeytinyağı 1L', brand: 'Sırım', price: 310.00, oldPrice: 340.00, unit: '1L', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'zy_3', name: 'Lio Sızma Zeytinyağı 1L', brand: 'Lio', price: 312.00, oldPrice: null, unit: '1L', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
-  { id: 'zy_4', name: 'Zeo Sızma Zeytinyağı 1L', brand: 'Zeo', price: 315.00, oldPrice: 345.00, unit: '1L', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-
-  { id: 'ty_1', name: 'Tarım Kredi Geleneksel Tereyağı 1 kg', brand: 'Tarım Kredi', price: 280.00, oldPrice: 310.00, unit: '1 kg', market: 'Tarım Kredi', source: 'Cimri Güncel', tier: 2 },
-  { id: 'ty_2', name: 'Kebir Yayık Tereyağı 1 kg', brand: 'Kebir', price: 285.00, oldPrice: 320.00, unit: '1 kg', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'ty_3', name: 'Milkten Tereyağı 1 kg', brand: 'Milkten', price: 288.00, oldPrice: 325.00, unit: '1 kg', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'ty_4', name: 'Mis Tereyağı 1 kg', brand: 'Mis', price: 290.00, oldPrice: null, unit: '1 kg', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
-
-  // --- PEYNİR ---
-  { id: 'pn_1', name: 'Tarım Kredi Tam Yağlı Beyaz Peynir 1 kg', brand: 'Tarım Kredi', price: 135.00, oldPrice: 150.00, unit: '1 kg', market: 'Tarım Kredi', source: 'Cimri Güncel', tier: 2 },
-  { id: 'pn_2', name: 'Aknaz Tam Yağlı Beyaz Peynir 1 kg', brand: 'Aknaz', price: 139.00, oldPrice: 155.00, unit: '1 kg', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'pn_3', name: 'Ahir Tam Yağlı Beyaz Peynir 1 kg', brand: 'Ahir', price: 140.00, oldPrice: 158.00, unit: '1 kg', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'pn_4', name: 'Mis Tam Yağlı Beyaz Peynir 1 kg', brand: 'Mis', price: 142.00, oldPrice: null, unit: '1 kg', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
-
-  { id: 'ks_1', name: 'Tarım Kredi Taze Kaşar Peyniri 1 kg', brand: 'Tarım Kredi', price: 230.00, oldPrice: 250.00, unit: '1 kg', market: 'Tarım Kredi', source: 'Cimri Güncel', tier: 2 },
-  { id: 'ks_2', name: 'Kaanlar Taze Kaşar Peyniri 1 kg', brand: 'Kaanlar', price: 235.00, oldPrice: 260.00, unit: '1 kg', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'ks_3', name: 'Tarabya Taze Kaşar Peyniri 1 kg', brand: 'Tarabya', price: 238.00, oldPrice: 265.00, unit: '1 kg', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'ks_4', name: 'Mis Taze Kaşar Peyniri 1 kg', brand: 'Mis', price: 239.00, oldPrice: null, unit: '1 kg', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
-
-  // --- ÇAY ---
-  { id: 'cy_1', name: 'Tarım Kredi Rize Çayı 1 kg', brand: 'Tarım Kredi', price: 145.00, oldPrice: 160.00, unit: '1 kg', market: 'Tarım Kredi', source: 'Cimri Güncel', tier: 2 },
-  { id: 'cy_2', name: 'Berk Rize Çayı 1 kg', brand: 'Berk', price: 148.00, oldPrice: 165.00, unit: '1 kg', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'cy_3', name: 'Karadem Rize Çayı 1 kg', brand: 'Karadem', price: 149.00, oldPrice: 168.00, unit: '1 kg', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'cy_4', name: 'Deren Rize Çayı 1 kg', brand: 'Deren', price: 150.00, oldPrice: null, unit: '1 kg', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
-  { id: 'cy_5', name: 'Çaykur Rize Turist Çayı 1 kg', brand: 'Çaykur', price: 185.00, oldPrice: 198.00, unit: '1 kg', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-
-  // --- SÜT & YUMURTA ---
-  { id: 'st_1', name: 'Tarım Kredi Tam Yağlı Süt 1L', brand: 'Tarım Kredi', price: 37.50, oldPrice: 40.00, unit: '1L', market: 'Tarım Kredi', source: 'Mağaza Kataloğu', tier: 3 },
-  { id: 'st_2', name: 'Dost Tam Yağlı Süt 1L', brand: 'Dost', price: 38.50, oldPrice: 41.00, unit: '1L', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'st_3', name: 'Birşah Tam Yağlı Süt 1L', brand: 'Birşah', price: 39.00, oldPrice: 42.50, unit: '1L', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'st_4', name: 'Mis Tam Yağlı Süt 1L', brand: 'Mis', price: 39.50, oldPrice: null, unit: '1L', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
-
-  { id: 'ym_1', name: 'TK Gezen Tavuk Yumurta 10lu', brand: 'Tarım Kredi', price: 95.00, oldPrice: null, unit: '10lu', market: 'Tarım Kredi', source: 'tkkoop.com.tr (Canlı)', tier: 1 },
-  { id: 'ym_2', name: 'Bili Bili L Boy Yumurta 30lu', brand: 'Bili Bili', price: 138.00, oldPrice: 155.00, unit: '30lu', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'ym_3', name: 'Keskinoğlu L Boy Yumurta 30lu', brand: 'Keskinoğlu', price: 140.00, oldPrice: 158.00, unit: '30lu', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'ym_4', name: 'CP L Boy Yumurta 30lu', brand: 'CP', price: 142.00, oldPrice: null, unit: '30lu', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
-
-  // --- BULGUR & PİRİNÇ & ŞEKER ---
-  { id: 'bg_1', name: 'Tarım Kredi Pilavlık Bulgur 1 kg', brand: 'Tarım Kredi', price: 23.90, oldPrice: 26.00, unit: '1 kg', market: 'Tarım Kredi', source: 'Cimri Güncel', tier: 2 },
-  { id: 'bg_2', name: 'Efsane Pilavlık Bulgur 1 kg', brand: 'Efsane', price: 24.50, oldPrice: 27.00, unit: '1 kg', market: 'BİM', source: 'Cimri / Akakçe Güncel', tier: 2 },
-  { id: 'bg_3', name: 'Yöremce Pilavlık Bulgur 1 kg', brand: 'Yöremce', price: 25.00, oldPrice: 28.00, unit: '1 kg', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'bg_4', name: 'Anadolu Mutfağı Pilavlık Bulgur 1 kg', brand: 'Anadolu Mutfağı', price: 25.50, oldPrice: null, unit: '1 kg', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
-
-  { id: 'pr_1', name: 'Tarım Kredi Anadolu Osmancık Pirinç 1 kg', brand: 'Tarım Kredi', price: 38.90, oldPrice: 42.00, unit: '1 kg', market: 'Tarım Kredi', source: 'Cimri Güncel', tier: 2 },
-  { id: 'pr_2', name: 'Efsane Osmancık Pirinç 1 kg', brand: 'Efsane', price: 39.50, oldPrice: 44.00, unit: '1 kg', market: 'BİM', source: 'Cimri / Akakçe Güncel', tier: 2 },
-  { id: 'pr_3', name: 'Ovadan Osmancık Pirinç 1 kg', brand: 'Ovadan', price: 40.00, oldPrice: 45.00, unit: '1 kg', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-  { id: 'pr_4', name: 'Anadolu Mutfağı Osmancık Pirinç 1 kg', brand: 'Anadolu Mutfağı', price: 41.00, oldPrice: null, unit: '1 kg', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 2 },
-
-  { id: 'sk_1', name: 'Tarım Kredi Toz Şeker 5 kg', brand: 'Tarım Kredi', price: 225.00, oldPrice: 240.00, unit: '5 kg', market: 'Tarım Kredi', source: 'Cimri Güncel', tier: 2 },
-  { id: 'sk_2', name: 'Balkan Toz Şeker 5 kg', brand: 'Balkan', price: 228.00, oldPrice: 245.00, unit: '5 kg', market: 'BİM', source: 'Cimri Güncel', tier: 2 },
-  { id: 'sk_3', name: 'Petek Toz Şeker 5 kg', brand: 'Petek', price: 229.00, oldPrice: 249.00, unit: '5 kg', market: 'A101', source: 'Akakçe Güncel', tier: 2 },
-
-  // --- TAVUK & ET ---
-  { id: 'cmp_1', name: 'Erpiliç Poşetli Bütün Piliç kg', brand: 'Erpiliç', price: 112.50, oldPrice: 125.00, unit: '1 kg', market: 'BİM', source: 'Cimri / Akakçe Güncel', tier: 2 },
-  { id: 'cmp_2', name: 'CP Poşetli Bütün Piliç kg', brand: 'CP', price: 115.00, oldPrice: 128.00, unit: '1 kg', market: 'A101', source: 'Cimri / Akakçe Güncel', tier: 2 },
-  { id: 'cmp_3', name: 'Banvit Poşetli Bütün Piliç kg', brand: 'Banvit', price: 118.00, oldPrice: null, unit: '1 kg', market: 'ŞOK', source: 'Cimri / Akakçe Güncel', tier: 2 },
-  { id: 'cmp_4', name: 'E.S.K Gövde Tavuk kg', brand: 'Tarım Kredi', price: 109.90, oldPrice: null, unit: '1 kg', market: 'Tarım Kredi', source: 'Mağaza Kataloğu', tier: 3 }
+  { id: 'yg_1', name: 'Tarım Kredi Anadolu Ayçiçek Yağı 5L', brand: 'Tarım Kredi', price: 445.00, oldPrice: 475.00, unit: '5L', market: 'Tarım Kredi', source: 'Cimri / Akakçe Güncel', tier: 3 },
+  { id: 'yg_2', name: 'Sole Ayçiçek Yağı 5L', brand: 'Sole', price: 455.00, oldPrice: 485.00, unit: '5L', market: 'BİM', source: 'Cimri / Akakçe Güncel', tier: 3 },
+  { id: 'yg_3', name: 'Evin Ayçiçek Yağı 5L', brand: 'Evin', price: 458.00, oldPrice: null, unit: '5L', market: 'ŞOK', source: 'Enucuzgo Güncel', tier: 3 },
+  { id: 'yg_4', name: 'Vera Ayçiçek Yağı 5L', brand: 'Vera', price: 459.00, oldPrice: 490.00, unit: '5L', market: 'A101', source: 'Akakçe Güncel', tier: 3 }
 ];
 
 export async function GET(request) {
@@ -295,18 +314,23 @@ export async function GET(request) {
   const qNorm = trLower(query.trim());
   const words = qNorm.split(/\s+/).filter(w => w.length >= 2);
 
-  // 1. KADEME: Canlı Tarım Kredi Scraper (tkkoop.com.tr)
-  let tier1Live = await fetchTkKoopLive(query);
+  // KADEME 1 (Birincil): T.C. Sanayi Bakanlığı Resmi API (BİM, A101, ŞOK, Tarım Kredi...)
+  let productsList = await fetchOfficialMarketApi(query);
 
-  // Vercel / Cloudflare engeline karşı prices_db.json hibrit yedek veri tabanı
-  if (tier1Live.length === 0) {
+  // KADEME 2: Canlı Tarım Kredi Web Scraper (Yedek)
+  if (productsList.length === 0) {
+    const tkLive = await fetchTkKoopLive(query);
+    productsList = [...productsList, ...tkLive];
+  }
+
+  // KADEME 3: Çevrimdışı ve Yerel prices_db.json / AUTHENTIC_MARKET_DATABASE (Yedek)
+  if (productsList.length === 0) {
     try {
       const dbPath = path.join(process.cwd(), 'prices_db.json');
       if (fs.existsSync(dbPath)) {
         const fileContent = fs.readFileSync(dbPath, 'utf8');
         const dbProducts = JSON.parse(fileContent);
-        
-        tier1Live = dbProducts.filter(item => {
+        const filteredDB = dbProducts.filter(item => {
           const n = trLower(item.name);
           return words.every(w => n.includes(w)) || (words.length === 0 && n.includes(qNorm));
         }).map((item, idx) => ({
@@ -318,16 +342,17 @@ export async function GET(request) {
           unit: item.unit || '1 adet',
           unitPrice: calculateUnitPrice(item.price, item.unit),
           market: 'Tarım Kredi',
-          source: 'tkkoop.com.tr (Doğrulanmış)',
-          tier: 1
+          source: 'tkkoop.com.tr (Doğrulanmış Yedek)',
+          tier: 3
         }));
+        productsList = [...productsList, ...filteredDB];
       }
     } catch (err) {
-      console.log('Error reading prices_db.json fallback:', err.message);
+      console.log('Error reading prices_db.json:', err.message);
     }
   }
 
-  // 2. KADEME & 3. KADEME: Cimri.com, Akakce.com, Enucuzgo & Yerel Broşür Veri Tabanı
+  // Çevrimdışı BİM, A101, ŞOK Yerel Eşleşmeleri
   const authenticMatches = AUTHENTIC_MARKET_DATABASE.filter(item => {
     const n = trLower(item.name);
     const b = trLower(item.brand);
@@ -343,7 +368,7 @@ export async function GET(request) {
     return words.every(w => n.includes(w) || b.includes(w)) || (words.length === 1 && (n.includes(qNorm) || b.includes(qNorm)));
   });
 
-  const allRaw = [...tier1Live, ...authenticMatches];
+  const allRaw = [...productsList, ...authenticMatches];
   const seen = new Set();
   const finalProducts = [];
 
