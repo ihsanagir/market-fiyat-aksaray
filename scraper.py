@@ -73,7 +73,6 @@ def calculate_unit_price(price, unit):
             
     return None
 
-# 1. KADEME: TARIM KREDİ KOOP CANLI SCRAPER (tkkoop.com.tr)
 def fetch_tkkoop_live(query):
     try:
         url = f'https://www.tkkoop.com.tr/arama?ara={requests.utils.quote(query)}'
@@ -117,18 +116,34 @@ def fetch_tkkoop_live(query):
         return products
     except Exception: return []
 
-# 2. KADEME: CİMRİ.COM, AKAKÇE.COM & ENUCUZGO.COM GÜNCEL FİYAT İNDEXER
 COMPARISON_INDEX = [
+    # --- BULGUR ---
+    {'id': 'bg_1', 'name': 'Tarım Kredi Pilavlık Bulgur 1 kg', 'brand': 'Tarım Kredi', 'price': 23.90, 'oldPrice': 26.00, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'bg_2', 'name': 'Efsane Pilavlık Bulgur 1 kg', 'brand': 'Efsane', 'price': 24.50, 'oldPrice': 27.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
+    {'id': 'bg_3', 'name': 'Yöremce Pilavlık Bulgur 1 kg', 'brand': 'Yöremce', 'price': 25.00, 'oldPrice': 28.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
+    {'id': 'bg_4', 'name': 'Anadolu Mutfağı Pilavlık Bulgur 1 kg', 'brand': 'Anadolu Mutfağı', 'price': 25.50, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+    {'id': 'bg_5', 'name': 'Tarım Kredi Köftelik Bulgur 1 kg', 'brand': 'Tarım Kredi', 'price': 24.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'bg_6', 'name': 'Efsane Köftelik Bulgur 1 kg', 'brand': 'Efsane', 'price': 24.50, 'oldPrice': 27.50, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'bg_7', 'name': 'Yöremce Köftelik Bulgur 1 kg', 'brand': 'Yöremce', 'price': 25.00, 'oldPrice': 28.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
+    {'id': 'bg_8', 'name': 'Anadolu Mutfağı Köftelik Bulgur 1 kg', 'brand': 'Anadolu Mutfağı', 'price': 25.50, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+
+    # --- PİRİNÇ ---
+    {'id': 'pr_1', 'name': 'Tarım Kredi Anadolu Osmancık Pirinç 1 kg', 'brand': 'Tarım Kredi', 'price': 38.90, 'oldPrice': 42.00, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'pr_2', 'name': 'Efsane Osmancık Pirinç 1 kg', 'brand': 'Efsane', 'price': 39.50, 'oldPrice': 44.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
+    {'id': 'pr_3', 'name': 'Ovadan Osmancık Pirinç 1 kg', 'brand': 'Ovadan', 'price': 40.00, 'oldPrice': 45.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
+    {'id': 'pr_4', 'name': 'Anadolu Mutfağı Osmancık Pirinç 1 kg', 'brand': 'Anadolu Mutfağı', 'price': 41.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier: 2},
+
+    # --- MERCİMEK & UN & SALÇA ---
+    {'id': 'mc_1', 'name': 'Tarım Kredi Kırmızı Mercimek 1 kg', 'brand': 'Tarım Kredi', 'price': 37.50, 'oldPrice': 41.00, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'mc_2', 'name': 'Efsane Kırmızı Mercimek 1 kg', 'brand': 'Efsane', 'price': 38.00, 'oldPrice': 42.50, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
+    {'id': 'mc_3', 'name': 'Yöremce Kırmızı Mercimek 1 kg', 'brand': 'Yöremce', 'price': 38.50, 'oldPrice': 43.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
+    {'id': 'mc_4', 'name': 'Anadolu Mutfağı Kırmızı Mercimek 1 kg', 'brand': 'Anadolu Mutfağı', 'price': 39.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Enucuzgo Güncel', 'tier': 2},
+
     {'id': 'cmp_1', 'name': 'Erpiliç Poşetli Bütün Piliç kg', 'brand': 'Erpiliç', 'price': 112.50, 'oldPrice': 125.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
     {'id': 'cmp_2', 'name': 'CP Poşetli Bütün Piliç kg', 'brand': 'CP', 'price': 115.00, 'oldPrice': 128.00, 'unit': '1 kg', 'market': 'A101', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
-    {'id': 'cmp_3', 'name': 'Banvit Poşetli Bütün Piliç kg', 'brand': 'Banvit', 'price': 118.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Cimri / Akakçe Güncel', 'tier': 2},
-    {'id': 'cmp_4', 'name': 'Piliç Göğüs Bonfile kg', 'brand': 'Erpiliç', 'price': 169.90, 'oldPrice': 189.00, 'unit': '1 kg', 'market': 'BİM', 'source': 'Enucuzgo Güncel', 'tier': 2},
-    {'id': 'cmp_5', 'name': 'Dost Tam Yağlı Süt 1L', 'brand': 'Dost', 'price': 38.50, 'oldPrice': 41.00, 'unit': '1L', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2},
-    {'id': 'cmp_6', 'name': 'Birşah Yarım Yağlı Süt 1L', 'brand': 'Birşah', 'price': 39.00, 'oldPrice': 42.50, 'unit': '1L', 'market': 'A101', 'source': 'Akakçe Güncel', 'tier': 2},
-    {'id': 'cmp_7', 'name': 'Sole Ayçiçek Yağı 5L', 'brand': 'Sole', 'price': 455.00, 'oldPrice': 485.00, 'unit': '5L', 'market': 'BİM', 'source': 'Cimri Güncel', 'tier': 2}
+    {'id': 'cmp_3', 'name': 'Banvit Poşetli Bütün Piliç kg', 'brand': 'Banvit', 'price': 118.00, 'oldPrice': None, 'unit': '1 kg', 'market': 'ŞOK', 'source': 'Cimri / Akakçe Güncel', 'tier': 2}
 ]
 
-# 3. KADEME: AKSARAY & SULTANHANI MAĞAZA KATALOĞU İNDEXER
 LOCAL_CATALOG = [
     {'id': 'loc_1', 'name': 'E.S.K Gövde Tavuk kg', 'brand': 'Tarım Kredi', 'price': 109.90, 'oldPrice': None, 'unit': '1 kg', 'market': 'Tarım Kredi', 'source': 'Mağaza Kataloğu', 'tier': 3},
     {'id': 'loc_2', 'name': 'Somun Ekmek 200g (Aksaray Fırın)', 'brand': 'Halk', 'price': 12.50, 'oldPrice': None, 'unit': '200g', 'market': 'Tarım Kredi', 'source': 'Mağaza Kataloğu', 'tier': 3}
@@ -154,13 +169,8 @@ def search_market_products(query, location="Aksaray"):
     q_norm = tr_lower(query_clean)
     words = [w for w in q_norm.split() if len(w) >= 2]
 
-    # 1. KADEME: Tarım Kredi Canlı Scraper
     tier1 = fetch_tkkoop_live(query_clean)
-
-    # 2. KADEME: Cimri, Akakçe, Enucuzgo Güncel Fiyatlar
     tier2 = [x for x in COMPARISON_INDEX if any(w in tr_lower(x['name']) for w in words)]
-
-    # 3. KADEME: Aksaray & Sultanhanı Mağaza Kataloğu Indexer
     tier3 = [x for x in LOCAL_CATALOG if any(w in tr_lower(x['name']) for w in words)]
 
     all_raw = list(tier1) + list(tier2) + list(tier3)
